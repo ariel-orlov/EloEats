@@ -14,6 +14,11 @@ export default function FridgeCam({ onCapture, label = 'Capture' }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError('Camera requires a secure connection (HTTPS). Try connecting via a tunnel or localhost.');
+      return;
+    }
+
     navigator.mediaDevices
       .getUserMedia({ video: { facingMode: 'environment' } })
       .then(stream => {
