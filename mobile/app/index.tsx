@@ -10,10 +10,8 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 
-// In the simulator/dev, the Next.js app runs on your Mac's localhost.
-// On a real device over the same Wi-Fi, replace with your Mac's local IP, e.g. http://192.168.1.x:3000
-// In production, replace with your deployed URL.
-const DEV_URL = Platform.OS === 'ios' ? 'https://femur-stammer-graduate.ngrok-free.dev' : 'http://10.0.2.2:3000';
+// On a real device, set EXPO_PUBLIC_APP_URL to your Mac's local IP or ngrok URL.
+const DEV_URL = Platform.OS === 'android' ? 'http://10.0.2.2:3000' : 'https://femur-stammer-graduate.ngrok-free.dev';
 const PROD_URL = process.env.EXPO_PUBLIC_APP_URL ?? DEV_URL;
 
 export default function AppScreen() {

@@ -22,7 +22,8 @@
     "scheme": "fridgewise",
     "plugins": [
       "expo-router",
-      "expo-asset"
+      "expo-asset",
+      "expo-font"
     ]
   }
 }
