@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "FridgeWise",
+    "slug": "fridgewise",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fridgewise.app",
+      "usesAppleSignIn": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.fridgewise.app"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "FridgeWise needs camera access to scan your fridge."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "FridgeWise needs photo access to scan images from your library."
+        }
+      ]
+    ],
+    "scheme": "fridgewise",
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000"
+    }
+  }
+}

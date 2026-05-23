@@ -1,139 +1,107 @@
 # FridgeWise
 
-**Gamified healthy eating powered by AI fridge scanning.**
-
-FridgeWise lets you scan your fridge, get instant health scores for every food item inside, log what you eat, and compete on a global leaderboard — turning good nutrition into a game you actually want to play.
+FridgeWise is an iOS app that makes healthy eating competitive. You take a photo of your fridge, the AI identifies every food item and scores it based on how healthy it is, you log what you eat throughout the day, and your score goes up or down accordingly. Everyone's scores feed into a live leaderboard — so eating well actually means something.
 
 ---
 
-## Core Features
+## What it does
 
-### AI Fridge Scan
-Take a photo of your fridge (or any meal). The AI identifies every food item visible and assigns each one a health score — positive for nutritious foods, negative for junk — with a brief explanation of why.
+**Fridge scan.** Open the camera, point it at your fridge (or a meal, or your pantry), and GPT-4o Vision identifies everything it can see. Each item comes back with a health score and a short explanation — why broccoli gets a +8, why that can of soda gets a -7. It's not moralizing, just honest.
 
-### Health Score System
-Each food you log adjusts your personal health score. Eating a salad? Points up. Finishing that bag of chips? Points down. Your score reflects your real eating habits over time, not just intent.
+**Food logging.** Tap anything from your scan to log it. You can also search manually or scan a barcode. Every item you log adjusts your running health score. The score reflects what you actually eat, not what you plan to eat.
 
-### Leaderboard
-Compete with friends or the global community. The leaderboard ranks users by their rolling health score, creating social accountability and motivation to keep eating well.
-
-### Food Log
-A daily log of everything you've eaten, each entry tagged with its health impact. See patterns, streaks, and progress over time.
+**Leaderboard.** Your score is public to whoever you compete with — friends, a group, or the global ranking. It's a rolling 30-day average so one bad week doesn't define you and one good day doesn't catapult you to the top. The goal is sustained habits, not tricks.
 
 ---
 
-## Tech Stack (Planned)
+## Health scoring
 
-| Layer | Technology |
-|---|---|
-| iOS App | Swift + SwiftUI |
-| AI Vision | OpenAI GPT-4o Vision (food identification + scoring) |
-| Backend API | Node.js (Express) or Python (FastAPI) |
-| Database | Firebase Firestore (real-time leaderboard) |
-| Auth | Firebase Authentication (Sign in with Apple / Google) |
-| Hosting | Firebase Functions or Fly.io |
+Foods are scored from -10 to +10 per serving. The AI scores them and we normalize against a reference table:
 
----
-
-## How It Works
-
-```
-User opens app
-    │
-    ├─▶ Scan Fridge
-    │       │
-    │       └─▶ Camera → AI Vision API
-    │               │
-    │               └─▶ List of foods + health scores displayed
-    │
-    ├─▶ Log Food
-    │       │
-    │       └─▶ Select item from scan or search manually
-    │               │
-    │               └─▶ Score applied to user's profile
-    │
-    └─▶ Leaderboard
-            │
-            └─▶ Real-time ranking of all users by health score
-```
-
----
-
-## Health Scoring Logic
-
-Foods are scored on a **-10 to +10 scale** per serving:
-
-| Category | Examples | Score Range |
+| Category | Examples | Score range |
 |---|---|---|
-| Vegetables & fruits | Spinach, berries, broccoli | +6 to +10 |
-| Whole grains & legumes | Oats, lentils, quinoa | +3 to +6 |
+| Vegetables and fruits | Spinach, berries, broccoli | +6 to +10 |
+| Whole grains and legumes | Oats, lentils, quinoa | +3 to +6 |
 | Lean proteins | Chicken breast, eggs, tofu | +2 to +5 |
 | Dairy | Yogurt, cheese | -1 to +3 |
 | Processed foods | Chips, white bread | -3 to -6 |
-| Fast food / sugary drinks | Soda, fries, candy | -6 to -10 |
+| Fast food and sugary drinks | Soda, fries, candy | -6 to -10 |
 
-Scores are accumulated daily and averaged over a rolling 30-day window to determine leaderboard position.
+Leaderboard position is based on your rolling 30-day average, not a total. This keeps it fair between people who joined last week vs. last year.
 
 ---
 
-## Project Structure (Planned)
+## Architecture
+
+**Mobile app** — React Native with Expo. Expo Router handles navigation, `expo-camera` and `expo-image-picker` handle photo capture. TypeScript throughout. Works on iOS and Android from the same codebase, which is useful for testing even if the primary target is iOS.
+
+**AI vision** — GPT-4o Vision via the OpenAI API. The image goes to the backend (not directly from the app — we don't expose API keys client-side), the backend sends it to OpenAI with a structured prompt, and the response comes back as a JSON array of food items with scores and explanations. We use function calling to enforce the response schema so parsing is deterministic.
+
+**Backend API** — Node.js with TypeScript and Express. Handles the OpenAI call, applies the scoring normalization, manages the food log writes, and serves the leaderboard. Deployed on Fly.io (or Firebase Functions — TBD based on cold start tolerance).
+
+**Database** — Firebase Firestore. Real-time updates make the leaderboard feel alive without any polling logic on the client. Auth is Firebase Authentication with Sign in with Apple as the primary option (required for App Store) and Google as a fallback.
+
+**Scoring pipeline** — when a user logs a food item, a Firestore write triggers a Cloud Function that recalculates their 30-day rolling average and updates their leaderboard document. The leaderboard collection stays denormalized so the iOS client can read it in a single query.
+
+---
+
+## Project structure
 
 ```
 FridgeWise/
-├── ios/                  # SwiftUI iOS app
-│   ├── FridgeWise.xcodeproj
-│   ├── Views/
-│   │   ├── ScanView.swift
-│   │   ├── FoodLogView.swift
-│   │   └── LeaderboardView.swift
-│   ├── Models/
-│   │   ├── FoodItem.swift
-│   │   ├── UserScore.swift
-│   │   └── LogEntry.swift
-│   └── Services/
-│       ├── AIVisionService.swift
-│       ├── FirebaseService.swift
-│       └── AuthService.swift
-│
-├── backend/              # API server
-│   ├── src/
-│   │   ├── routes/
-│   │   │   ├── scan.ts       # AI vision endpoint
-│   │   │   ├── log.ts        # Food logging
-│   │   │   └── leaderboard.ts
-│   │   └── services/
-│   │       ├── openai.ts
-│   │       └── scoring.ts
+├── mobile/                  # Expo (React Native) app
+│   ├── app/
+│   │   ├── _layout.tsx
+│   │   ├── login.tsx
+│   │   └── (tabs)/
+│   │       ├── index.tsx        # Scan screen
+│   │       ├── log.tsx          # Food log
+│   │       ├── leaderboard.tsx
+│   │       └── profile.tsx
+│   ├── services/
+│   │   ├── api.ts
+│   │   └── auth.ts
+│   ├── types/
+│   │   └── index.ts
+│   ├── app.json
 │   └── package.json
 │
-└── docs/                 # Design docs and specs
+├── backend/
+│   ├── src/
+│   │   ├── routes/
+│   │   │   ├── scan.ts
+│   │   │   ├── log.ts
+│   │   │   └── leaderboard.ts
+│   │   ├── services/
+│   │   │   ├── openai.ts
+│   │   │   └── scoring.ts
+│   │   ├── middleware/
+│   │   │   └── auth.ts
+│   │   └── index.ts
+│   ├── package.json
+│   └── tsconfig.json
+│
+└── docs/
+    └── specs/
 ```
 
 ---
 
-## Roadmap
+## Build order
 
-- [ ] MVP: Fridge scan → food identification → health score display
-- [ ] Food logging and score accumulation
-- [ ] User auth and profiles
-- [ ] Real-time leaderboard (friends + global)
-- [ ] Streak tracking and badges
-- [ ] Weekly/monthly score history charts
-- [ ] Social sharing of scans and achievements
-- [ ] Barcode scanning for packaged foods
-- [ ] Nutritionist-reviewed scoring model
+1. Backend scan endpoint — image in, JSON food list out. This is the core value proposition and needs to work well before anything else.
+2. iOS camera + scan UI — capture photo, send to backend, display results.
+3. Firebase auth — Sign in with Apple.
+4. Food log — tap to log, score updates in Firestore.
+5. Leaderboard — read from Firestore, display rankings.
+6. Streaks, badges, social sharing — post-MVP.
+7. Barcode scanning for packaged foods — post-MVP.
 
 ---
 
-## Getting Started
+## Setup
 
-> Development setup instructions will be added as the project scaffolds out.
-
----
-
-## Contributing
-
-This project is in early design/planning phase. Architecture decisions and spec documents will be in `docs/`. PRs and issues welcome once the MVP is scaffolded.
+> Development setup instructions will be added as the project scaffolds out. You will need an OpenAI API key and a Firebase project with Firestore and Auth enabled.
 
 ---
 
