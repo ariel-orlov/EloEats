@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { isDemoMode } from '@/lib/demo-mode';
-import { getDemoHistoryEntries } from '@/lib/demo-data';
 import { updateLeaderboard } from '@/lib/scoring';
+import { addEntries, getLog } from '@/lib/session-store';
 import type { ConsumedItem, FoodCategory } from '@/types';
-
-// In-memory session log for demo mode — survives page navigation within one server process
-const sessionLog: (ConsumedItem & { id: string; consumedAt: string; redeemed?: boolean })[] = [];
-let sessionCounter = 1000;
 
 const VALID_CATEGORIES: readonly FoodCategory[] = [
   'vegetable_fruit',
@@ -83,34 +79,24 @@ export async function POST(req: NextRequest) {
     items: ConsumedItem[];
   };
 
+  // Always write to session store (persists across page navigations)
+  addEntries(items, userId, displayName);
+
   if (isDemoMode) {
-    const now = new Date().toISOString();
-    for (const item of items) {
-      sessionLog.unshift({
-        ...item,
-        id: `session-${sessionCounter++}`,
-        consumedAt: now,
-        userId,
-        displayName,
-      } as ConsumedItem & { id: string; consumedAt: string });
-    }
     return NextResponse.json({ ok: true, logged: items.length, demo: true });
   }
 
-  if (!db) {
-    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+  // Also write to Firebase if available
+  if (db) {
+    const now = new Date().toISOString();
+    const batch = db.batch();
+    for (const item of items) {
+      const ref = db.collection('consumed').doc();
+      batch.set(ref, { ...item, userId, displayName, consumedAt: now });
+    }
+    await batch.commit();
+    await updateLeaderboard(userId, displayName, items);
   }
-
-  const now = new Date().toISOString();
-  const batch = db.batch();
-
-  for (const item of items) {
-    const ref = db.collection('consumed').doc();
-    batch.set(ref, { ...item, userId, displayName, consumedAt: now });
-  }
-
-  await batch.commit();
-  await updateLeaderboard(userId, displayName, items);
 
   return NextResponse.json({ ok: true, logged: items.length });
 }
@@ -120,14 +106,9 @@ export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
 
-  if (isDemoMode) {
-    const demoEntries = getDemoHistoryEntries();
-    const entries = [...sessionLog, ...demoEntries];
-    return NextResponse.json({ entries, demo: true });
-  }
-
-  if (!db) {
-    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+  // Always include session entries
+  if (isDemoMode || !db) {
+    return NextResponse.json({ entries: getLog(userId), demo: !db });
   }
 
   const snap = await db

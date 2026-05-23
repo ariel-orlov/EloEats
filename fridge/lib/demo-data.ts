@@ -129,24 +129,24 @@ export function getDemoHistoryItems(now = new Date()): DemoHistoryItem[] {
 // ─── Leaderboard ─────────────────────────────────────────────────────────────
 
 export const DEMO_LEADERBOARD_GLOBAL: LeaderboardEntry[] = [
-  { userId: '1',           displayName: 'Sophia Chen',    avgScore: 94.2, streakDays: 21, rank: 1 },
-  { userId: '2',           displayName: 'Marcus Rivera',  avgScore: 91.7, streakDays: 14, rank: 2 },
-  { userId: '3',           displayName: 'Priya Sharma',   avgScore: 88.5, streakDays: 30, rank: 3 },
-  { userId: DEMO_USER.id,  displayName: 'You',            avgScore: 85.1, streakDays: 7,  rank: 4 },
-  { userId: '5',           displayName: 'Jordan Lee',     avgScore: 82.4, streakDays: 5,  rank: 5 },
-  { userId: '6',           displayName: 'Anika Patel',    avgScore: 79.8, streakDays: 11, rank: 6 },
-  { userId: '7',           displayName: 'Tom Okafor',     avgScore: 76.3, streakDays: 3,  rank: 7 },
-  { userId: '8',           displayName: 'Camille Dubois', avgScore: 73.0, streakDays: 8,  rank: 8 },
-  { userId: '9',           displayName: 'Eli Nakamura',   avgScore: 69.5, streakDays: 2,  rank: 9 },
-  { userId: '10',          displayName: 'Sara Muller',    avgScore: 65.2, streakDays: 0,  rank: 10 },
+  { userId: '1',           displayName: 'Sophia Chen',    avgScore: 7.8, streakDays: 21, rank: 1 },
+  { userId: '2',           displayName: 'Marcus Rivera',  avgScore: 7.2, streakDays: 14, rank: 2 },
+  { userId: '3',           displayName: 'Priya Sharma',   avgScore: 6.9, streakDays: 30, rank: 3 },
+  { userId: DEMO_USER.id,  displayName: 'You',            avgScore: 4.8, streakDays: 7,  rank: 4 },
+  { userId: '5',           displayName: 'Jordan Lee',     avgScore: 4.5, streakDays: 5,  rank: 5 },
+  { userId: '6',           displayName: 'Anika Patel',    avgScore: 3.8, streakDays: 11, rank: 6 },
+  { userId: '7',           displayName: 'Tom Okafor',     avgScore: 2.9, streakDays: 3,  rank: 7 },
+  { userId: '8',           displayName: 'Camille Dubois', avgScore: 1.8, streakDays: 8,  rank: 8 },
+  { userId: '9',           displayName: 'Eli Nakamura',   avgScore: 0.6, streakDays: 2,  rank: 9 },
+  { userId: '10',          displayName: 'Sara Muller',    avgScore: -0.9, streakDays: 0, rank: 10 },
 ];
 
 export const DEMO_LEADERBOARD_NEARBY: LeaderboardEntry[] = [
-  { userId: '5',           displayName: 'Jordan Lee',     avgScore: 88.0, streakDays: 5, rank: 1 },
-  { userId: DEMO_USER.id,  displayName: 'You',            avgScore: 85.1, streakDays: 7, rank: 2 },
-  { userId: '7',           displayName: 'Tom Okafor',     avgScore: 80.6, streakDays: 3, rank: 3 },
-  { userId: '8',           displayName: 'Camille Dubois', avgScore: 71.2, streakDays: 8, rank: 4 },
-  { userId: '9',           displayName: 'Eli Nakamura',   avgScore: 66.4, streakDays: 2, rank: 5 },
+  { userId: '5',           displayName: 'Jordan Lee',     avgScore: 4.5, streakDays: 5, rank: 1 },
+  { userId: DEMO_USER.id,  displayName: 'You',            avgScore: 4.8, streakDays: 7, rank: 2 },
+  { userId: '7',           displayName: 'Tom Okafor',     avgScore: 2.9, streakDays: 3, rank: 3 },
+  { userId: '8',           displayName: 'Camille Dubois', avgScore: 1.8, streakDays: 8, rank: 4 },
+  { userId: '9',           displayName: 'Eli Nakamura',   avgScore: 0.6, streakDays: 2, rank: 5 },
 ];
 
 // ─── Balance credit system ───────────────────────────────────────────────────
