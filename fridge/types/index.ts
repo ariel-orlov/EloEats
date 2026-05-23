@@ -11,20 +11,21 @@ export interface FoodItem {
   score: number;
   category: FoodCategory;
   explanation: string;
-  servingSize?: string;
 }
 
-export interface ScanResult {
-  items: FoodItem[];
-  totalScore: number;
-}
-
-export interface LogEntry {
+// A snapshot of fridge contents at a point in time
+export interface FridgeSnapshot {
   id: string;
-  name: string;
-  score: number;
-  category: FoodCategory;
-  loggedAt: string;
+  items: FoodItem[];
+  capturedAt: string;
+  imageBase64?: string;
+}
+
+// What was consumed between two snapshots
+export interface ConsumedItem extends FoodItem {
+  consumedAt: string;
+  userId: string;
+  displayName: string;
 }
 
 export interface LeaderboardEntry {
@@ -33,9 +34,4 @@ export interface LeaderboardEntry {
   avgScore: number;
   streakDays: number;
   rank: number;
-}
-
-export interface LeaderboardResponse {
-  entries: LeaderboardEntry[];
-  currentUserId: string;
 }

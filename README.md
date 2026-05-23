@@ -1,22 +1,26 @@
 # FridgeWise
 
-FridgeWise is an iOS app that makes healthy eating competitive. You take a photo of your fridge, the AI identifies every food item and scores it based on how healthy it is, you log what you eat throughout the day, and your score goes up or down accordingly. Everyone's scores feed into a live leaderboard — so eating well actually means something.
+FridgeWise is a smart fridge app that gamifies healthy eating. The fridge has a built-in camera. It scans its own contents, tracks what gets taken out, scores it nutritionally, and posts everyone's scores to a live leaderboard. Eat well, beat your housemates.
+
+Built as a hackathon proof of concept.
 
 ---
 
-## What it does
+## How it works
 
-**Fridge scan.** Open the camera, point it at your fridge (or a meal, or your pantry), and GPT-4o Vision identifies everything it can see. Each item comes back with a health score and a short explanation — why broccoli gets a +8, why that can of soda gets a -7. It's not moralizing, just honest.
+The fridge runs a web app on its touchscreen display. There are two camera operations:
 
-**Food logging.** Tap anything from your scan to log it. You can also search manually or scan a barcode. Every item you log adjusts your running health score. The score reflects what you actually eat, not what you plan to eat.
+**Inventory scan.** Press "Scan Inventory" and the fridge camera identifies everything inside — each item comes back with a health score (-10 to +10) and a one-line explanation from GPT-4o Vision. This becomes the baseline.
 
-**Leaderboard.** Your score is public to whoever you compete with — friends, a group, or the global ranking. It's a rolling 30-day average so one bad week doesn't define you and one good day doesn't catapult you to the top. The goal is sustained habits, not tricks.
+**Door closed — log consumed.** After someone opens and closes the fridge, press this button. The camera captures the current state, compares it against the last inventory snapshot, and automatically logs whatever is missing as consumed. The person's health score updates and the leaderboard refreshes.
+
+For the demo, the "fridge" is a laptop or tablet running the app with its camera pointed into the fridge.
 
 ---
 
 ## Health scoring
 
-Foods are scored from -10 to +10 per serving. The AI scores them and we normalize against a reference table:
+Items are scored -10 to +10 per serving. GPT-4o assigns the score; we store and average it.
 
 | Category | Examples | Score range |
 |---|---|---|
@@ -27,21 +31,25 @@ Foods are scored from -10 to +10 per serving. The AI scores them and we normaliz
 | Processed foods | Chips, white bread | -3 to -6 |
 | Fast food and sugary drinks | Soda, fries, candy | -6 to -10 |
 
-Leaderboard position is based on your rolling 30-day average, not a total. This keeps it fair between people who joined last week vs. last year.
+Leaderboard position is a rolling 30-day average — not a total — so it reflects sustained habits.
 
 ---
 
 ## Architecture
 
-**Mobile app** — React Native with Expo. Expo Router handles navigation, `expo-camera` and `expo-image-picker` handle photo capture. TypeScript throughout. Works on iOS and Android from the same codebase, which is useful for testing even if the primary target is iOS.
+Everything runs in a single Next.js app. No separate backend server.
 
-**AI vision** — GPT-4o Vision via the OpenAI API. The image goes to the backend (not directly from the app — we don't expose API keys client-side), the backend sends it to OpenAI with a structured prompt, and the response comes back as a JSON array of food items with scores and explanations. We use function calling to enforce the response schema so parsing is deterministic.
+**Frontend** — React + Next.js, runs in the fridge's browser (or any browser for the demo). `getUserMedia` accesses the camera. Two views: fridge dashboard and leaderboard.
 
-**Backend API** — Node.js with TypeScript and Express. Handles the OpenAI call, applies the scoring normalization, manages the food log writes, and serves the leaderboard. Deployed on Fly.io (or Firebase Functions — TBD based on cold start tolerance).
+**API routes** — Next.js route handlers replace a standalone backend:
+- `POST /api/scan?mode=inventory` — sends camera image to GPT-4o, returns identified items, saves snapshot to Firestore
+- `POST /api/scan?mode=diff` — compares current image against last snapshot, returns consumed items
+- `POST /api/log` — persists consumed items, recalculates 30-day rolling average, updates leaderboard document
+- `GET /api/leaderboard` — reads ranked scores from Firestore
 
-**Database** — Firebase Firestore. Real-time updates make the leaderboard feel alive without any polling logic on the client. Auth is Firebase Authentication with Sign in with Apple as the primary option (required for App Store) and Google as a fallback.
+**AI vision** — GPT-4o Vision with function calling. The diff operation sends the before-inventory as text and the after-image as a photo, asking the model to identify what's missing. Function calling enforces a typed JSON response.
 
-**Scoring pipeline** — when a user logs a food item, a Firestore write triggers a Cloud Function that recalculates their 30-day rolling average and updates their leaderboard document. The leaderboard collection stays denormalized so the iOS client can read it in a single query.
+**Database** — Firebase Firestore. Three collections: `snapshots` (fridge state history), `consumed` (log of what was eaten), `scores` (denormalized leaderboard, updated on every log event).
 
 ---
 
@@ -49,59 +57,61 @@ Leaderboard position is based on your rolling 30-day average, not a total. This 
 
 ```
 FridgeWise/
-├── mobile/                  # Expo (React Native) app
+├── fridge/                  # Next.js app (runs on the fridge screen)
 │   ├── app/
-│   │   ├── _layout.tsx
-│   │   ├── login.tsx
-│   │   └── (tabs)/
-│   │       ├── index.tsx        # Scan screen
-│   │       ├── log.tsx          # Food log
-│   │       ├── leaderboard.tsx
-│   │       └── profile.tsx
-│   ├── services/
-│   │   ├── api.ts
-│   │   └── auth.ts
-│   ├── types/
-│   │   └── index.ts
-│   ├── app.json
-│   └── package.json
-│
-├── backend/
-│   ├── src/
-│   │   ├── routes/
-│   │   │   ├── scan.ts
-│   │   │   ├── log.ts
-│   │   │   └── leaderboard.ts
-│   │   ├── services/
-│   │   │   ├── openai.ts
-│   │   │   └── scoring.ts
-│   │   ├── middleware/
-│   │   │   └── auth.ts
-│   │   └── index.ts
-│   ├── package.json
-│   └── tsconfig.json
-│
+│   │   ├── page.tsx             # Main fridge dashboard
+│   │   ├── layout.tsx
+│   │   └── api/
+│   │       ├── scan/route.ts    # Vision + snapshot management
+│   │       ├── log/route.ts     # Consumption logging + scoring
+│   │       └── leaderboard/route.ts
+│   ├── components/
+│   │   ├── FridgeCam.tsx        # WebRTC camera component
+│   │   ├── InventoryView.tsx    # Food item list
+│   │   └── Leaderboard.tsx      # Live rankings (polls every 10s)
+│   ├── lib/
+│   │   ├── openai.ts            # Vision + diff logic
+│   │   ├── firebase-admin.ts    # Server-side Firestore
+│   │   ├── firebase-client.ts   # Client-side Firestore
+│   │   └── scoring.ts           # 30-day rolling average
+│   ├── types/index.ts
+│   └── .env.example
 └── docs/
-    └── specs/
 ```
 
 ---
 
-## Build order
+## Demo setup
 
-1. Backend scan endpoint — image in, JSON food list out. This is the core value proposition and needs to work well before anything else.
-2. iOS camera + scan UI — capture photo, send to backend, display results.
-3. Firebase auth — Sign in with Apple.
-4. Food log — tap to log, score updates in Firestore.
-5. Leaderboard — read from Firestore, display rankings.
-6. Streaks, badges, social sharing — post-MVP.
-7. Barcode scanning for packaged foods — post-MVP.
+```bash
+cd fridge
+cp .env.example .env   # fill in OpenAI key + Firebase credentials
+npm install
+npm run dev
+```
+
+Open `http://localhost:3000` on the device that will be the "fridge". Grant camera access when prompted.
+
+**Demo flow:**
+1. Point camera at fridge, press "Scan Inventory" — wait for GPT-4o to identify items
+2. Remove something from the fridge (soda, leftover pizza, whatever makes a good demo)
+3. Press "Door Closed — Log Consumed" — the app detects what's missing and logs it
+4. Switch to the Leaderboard tab to see the score update
+
+**What you need:**
+- OpenAI API key with GPT-4o access
+- Firebase project with Firestore enabled (no auth required for the demo — user is hardcoded)
 
 ---
 
-## Setup
+## Post-hackathon roadmap
 
-> Development setup instructions will be added as the project scaffolds out. You will need an OpenAI API key and a Firebase project with Firestore and Auth enabled.
+- Real user auth (Firebase Auth, Sign in with Apple)
+- Multi-user households — each person identifies themselves before taking food
+- Automatic door open/close detection via the fridge's sensor API
+- Barcode scanning for packaged foods
+- Streak tracking and badges
+- Weekly score history charts
 
 ---
 
