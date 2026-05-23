@@ -86,7 +86,7 @@ function AvatarCircle({ name, isCurrentUser }: { name: string; isCurrentUser?: b
 }
 
 function LeaderboardRow({ user, rank, isLast }: { user: LeaderboardUser; rank: number; isLast: boolean }) {
-  const scoreStrong = user.avgScore >= 70;
+  const scoreStrong = user.avgScore >= 5;
 
   return (
     <div
@@ -132,7 +132,7 @@ function MyRankCard({ rank, user }: { rank: number; user: LeaderboardUser }) {
         <span className="truncate font-semibold text-text">{user.name}</span>
         <span className="text-xs text-text-muted">30-day average</span>
         <span className="font-mono-data text-lg text-primary">
-          +{user.avgScore.toFixed(1)}
+          {user.avgScore >= 0 ? '+' : ''}{user.avgScore.toFixed(1)}
         </span>
       </div>
 

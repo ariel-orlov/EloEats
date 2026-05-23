@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { isDemoMode } from '@/lib/demo-mode';
-import { DEMO_LEADERBOARD_GLOBAL } from '@/lib/demo-data';
+import { getLeaderboard } from '@/lib/session-store';
 
 export async function GET() {
   if (isDemoMode) {
-    return NextResponse.json({ entries: DEMO_LEADERBOARD_GLOBAL, demo: true });
+    return NextResponse.json({ entries: getLeaderboard(), demo: true });
   }
 
   if (!db) {
-    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+    return NextResponse.json({ entries: getLeaderboard() });
   }
 
   const snap = await db

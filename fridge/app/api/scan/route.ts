@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { identifyFridgeContents, detectConsumedItems } from '@/lib/openai';
 import { db } from '@/lib/firebase-admin';
 import { isDemoMode } from '@/lib/demo-mode';
-import { DEMO_CONSUMED, DEMO_INVENTORY } from '@/lib/demo-data';
+import { DEMO_CONSUMED } from '@/lib/demo-data';
+import { getInventory, setInventory } from '@/lib/session-store';
 import type { FridgeSnapshot } from '@/types';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -84,13 +85,14 @@ export async function POST(req: NextRequest) {
   try {
     if (isDemoMode) {
       if (mode === 'inventory') {
-        return NextResponse.json({ snapshotId: 'demo-snapshot', items: DEMO_INVENTORY, demo: true });
+        return NextResponse.json({ snapshotId: 'demo-snapshot', items: getInventory(), demo: true });
       }
       return NextResponse.json({ consumed: DEMO_CONSUMED, demo: true });
     }
 
     if (mode === 'inventory') {
       const items = await identifyFridgeContents(image);
+      setInventory(items);
       let snapshotId: string | null = null;
       if (db) {
         try {
@@ -141,14 +143,18 @@ export async function POST(req: NextRequest) {
 // GET /api/scan — returns the current fridge inventory (last snapshot)
 export async function GET() {
   if (isDemoMode) {
-    return NextResponse.json({ items: DEMO_INVENTORY, snapshotId: 'demo-snapshot', demo: true });
+    return NextResponse.json({ items: getInventory(), snapshotId: 'demo-snapshot', demo: true });
   }
 
-  if (!db) {
-    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+  // Try Firestore first, fall back to session store
+  if (db) {
+    try {
+      const snap = await db.collection('snapshots').orderBy('capturedAt', 'desc').limit(1).get();
+      if (!snap.empty) return NextResponse.json({ items: snap.docs[0].data().items, snapshotId: snap.docs[0].id });
+    } catch (dbErr) {
+      console.warn('Firestore read skipped:', (dbErr as Error).message);
+    }
   }
 
-  const snap = await db.collection('snapshots').orderBy('capturedAt', 'desc').limit(1).get();
-  if (snap.empty) return NextResponse.json({ items: [] });
-  return NextResponse.json({ items: snap.docs[0].data().items, snapshotId: snap.docs[0].id });
+  return NextResponse.json({ items: getInventory() });
 }
