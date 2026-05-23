@@ -3,16 +3,81 @@ import { identifyFridgeContents, detectConsumedItems } from '@/lib/openai';
 import { db } from '@/lib/firebase-admin';
 import type { FridgeSnapshot } from '@/types';
 
+const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
+const BASE64_REGEX = /^[A-Za-z0-9+/]+={0,2}$/;
+const VALID_MODES = ['inventory', 'diff'] as const;
+
+// Validates the request body for POST /api/scan.
+// Returns an error response on failure, or the normalized payload on success.
+function validateScanBody(
+  body: unknown
+): { error: NextResponse } | { image: string; mode: 'inventory' | 'diff' } {
+  if (!body || typeof body !== 'object') {
+    return { error: NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) };
+  }
+
+  const { image, mode } = body as { image?: unknown; mode?: unknown };
+
+  if (typeof image !== 'string' || image.trim().length === 0) {
+    return {
+      error: NextResponse.json(
+        { error: 'image is required and must be a non-empty string' },
+        { status: 400 }
+      ),
+    };
+  }
+
+  // Strip optional data URL prefix before regex/size checks
+  const b64 = image.replace(/^data:image\/[A-Za-z0-9.+-]+;base64,/, '');
+
+  if (!BASE64_REGEX.test(b64)) {
+    return {
+      error: NextResponse.json(
+        { error: 'image must be valid base64' },
+        { status: 400 }
+      ),
+    };
+  }
+
+  const padding = b64.endsWith('==') ? 2 : b64.endsWith('=') ? 1 : 0;
+  const decodedBytes = Math.floor((b64.length * 3) / 4) - padding;
+  if (decodedBytes > MAX_IMAGE_BYTES) {
+    return {
+      error: NextResponse.json({ error: 'Image exceeds 10 MB limit' }, { status: 413 }),
+    };
+  }
+
+  let resolvedMode: 'inventory' | 'diff' = 'inventory';
+  if (mode !== undefined) {
+    if (typeof mode !== 'string' || !VALID_MODES.includes(mode as 'inventory' | 'diff')) {
+      return {
+        error: NextResponse.json(
+          { error: "mode must be 'inventory' or 'diff'" },
+          { status: 400 }
+        ),
+      };
+    }
+    resolvedMode = mode as 'inventory' | 'diff';
+  }
+
+  return { image: b64, mode: resolvedMode };
+}
+
 // POST /api/scan
 // Body: { image: base64, mode: 'inventory' | 'diff' }
 // 'inventory' = full scan of fridge contents, saves as new snapshot
 // 'diff'      = compare against last snapshot, return consumed items
 export async function POST(req: NextRequest) {
-  const { image, mode = 'inventory' } = await req.json() as { image: string; mode?: string };
-
-  if (!image) {
-    return NextResponse.json({ error: 'image is required' }, { status: 400 });
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
+
+  const validated = validateScanBody(body);
+  if ('error' in validated) return validated.error;
+  const { image, mode } = validated;
 
   try {
     if (mode === 'inventory') {

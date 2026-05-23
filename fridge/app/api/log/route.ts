@@ -1,21 +1,81 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { updateLeaderboard } from '@/lib/scoring';
-import type { ConsumedItem } from '@/types';
+import type { ConsumedItem, FoodCategory } from '@/types';
+
+const VALID_CATEGORIES: readonly FoodCategory[] = [
+  'vegetable_fruit',
+  'whole_grain_legume',
+  'lean_protein',
+  'dairy',
+  'processed',
+  'fast_food_sugary',
+];
+
+// Validates the request body for POST /api/log.
+// Returns either an error message string or null if valid.
+function validateLogBody(body: unknown): string | null {
+  if (!body || typeof body !== 'object') return 'Invalid JSON body';
+
+  const { userId, displayName, items } = body as {
+    userId?: unknown;
+    displayName?: unknown;
+    items?: unknown;
+  };
+
+  if (typeof userId !== 'string' || userId.trim().length === 0) {
+    return 'userId is required and must be a non-empty string';
+  }
+  if (typeof displayName !== 'string' || displayName.trim().length === 0) {
+    return 'displayName is required and must be a non-empty string';
+  }
+  if (!Array.isArray(items) || items.length === 0) {
+    return 'items must be a non-empty array';
+  }
+
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i] as Partial<ConsumedItem> | null;
+    if (!item || typeof item !== 'object') {
+      return `items[${i}] must be an object`;
+    }
+    if (typeof item.name !== 'string' || item.name.trim().length === 0) {
+      return `items[${i}].name must be a non-empty string`;
+    }
+    if (typeof item.score !== 'number' || !Number.isFinite(item.score) || item.score < -10 || item.score > 10) {
+      return `items[${i}].score must be a finite number between -10 and 10`;
+    }
+    if (typeof item.category !== 'string' || !VALID_CATEGORIES.includes(item.category as FoodCategory)) {
+      return `items[${i}].category must be one of: ${VALID_CATEGORIES.join(', ')}`;
+    }
+    if (typeof item.explanation !== 'string') {
+      return `items[${i}].explanation must be a string`;
+    }
+  }
+
+  return null;
+}
 
 // POST /api/log
 // Body: { userId, displayName, items: FoodItem[] }
 // Called automatically after a diff scan confirms consumed items
 export async function POST(req: NextRequest) {
-  const { userId, displayName, items } = await req.json() as {
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const validationError = validateLogBody(body);
+  if (validationError) {
+    return NextResponse.json({ error: validationError }, { status: 400 });
+  }
+
+  const { userId, displayName, items } = body as {
     userId: string;
     displayName: string;
     items: ConsumedItem[];
   };
-
-  if (!userId || !items?.length) {
-    return NextResponse.json({ error: 'userId and items are required' }, { status: 400 });
-  }
 
   const now = new Date().toISOString();
   const batch = db.batch();
