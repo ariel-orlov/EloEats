@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "FridgeWise",
+    "slug": "fridgewise",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#2d6a4f"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.fridgewise.app"
+    },
+    "android": {
+      "package": "com.fridgewise.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#2d6a4f"
+      }
+    },
+    "scheme": "fridgewise",
+    "plugins": [
+      "expo-router",
+      "expo-asset"
+    ]
+  }
+}
