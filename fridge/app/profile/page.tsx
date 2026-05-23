@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { BottomNav, Sidebar } from '@/components/Nav';
 import {
@@ -17,16 +18,44 @@ const TIER_META = {
   gold:   { label: 'Gold',   color: '#92400E', bg: '#FEF9C3', emoji: '🥇' },
 } as const;
 
-// ─── Settings rows with icons ─────────────────────────────────────────────────
+// ─── Settings persistence ─────────────────────────────────────────────────────
 
-const SETTINGS_ROWS = [
-  { label: 'Edit display name',           emoji: '✏️' },
-  { label: 'Notification preferences',    emoji: '🔔' },
-  { label: 'Privacy settings',            emoji: '🔒' },
-  { label: 'About FridgeWise',            emoji: 'ℹ️' },
-];
+const SETTINGS_KEY = 'fridgewise:settings';
+
+interface Settings {
+  displayName: string;
+  notifications: boolean;
+  publicProfile: boolean;
+  units: 'imperial' | 'metric';
+}
+
+function loadSettings(fallbackName: string): Settings {
+  if (typeof window === 'undefined') {
+    return { displayName: fallbackName, notifications: true, publicProfile: true, units: 'imperial' };
+  }
+  try {
+    const raw = window.localStorage.getItem(SETTINGS_KEY);
+    if (raw) return { displayName: fallbackName, notifications: true, publicProfile: true, units: 'imperial', ...JSON.parse(raw) };
+  } catch {}
+  return { displayName: fallbackName, notifications: true, publicProfile: true, units: 'imperial' };
+}
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
+
+function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      onClick={() => onChange(!on)}
+      role="switch"
+      aria-checked={on}
+      className={`relative w-10 h-6 rounded-full transition-colors ${on ? 'bg-primary' : 'bg-border'}`}
+    >
+      <span
+        className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform ${on ? 'translate-x-4' : ''}`}
+      />
+    </button>
+  );
+}
 
 function ChevronRight() {
   return (
@@ -43,6 +72,22 @@ function ChevronRight() {
 export default function ProfilePage() {
   const router = useRouter();
   const tier = TIER_META[DEMO_CREDIT_STATE.tier];
+  const [settings, setSettings] = useState<Settings>(() => loadSettings(DEMO_USER.displayName));
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
+
+  useEffect(() => { setSettings(loadSettings(DEMO_USER.displayName)); }, []);
+
+  function persist(next: Settings) {
+    setSettings(next);
+    try { window.localStorage.setItem(SETTINGS_KEY, JSON.stringify(next)); } catch {}
+  }
+  const startEditName = () => { setNameDraft(settings.displayName); setEditingName(true); };
+  const saveName = () => {
+    const trimmed = nameDraft.trim();
+    if (trimmed) persist({ ...settings, displayName: trimmed });
+    setEditingName(false);
+  };
 
   return (
     <div className="min-h-screen pl-0 lg:pl-16 pb-20 lg:pb-0 bg-bg">
@@ -71,7 +116,7 @@ export default function ProfilePage() {
             {/* Name + meta */}
             <div className="flex-1 min-w-0 pt-1">
               <h1 className="font-display text-2xl font-bold text-white leading-tight">
-                {DEMO_USER.displayName}
+                {settings.displayName}
               </h1>
               <p className="text-sm text-white/60 mt-0.5">Member since {DEMO_USER.memberSince}</p>
 
@@ -187,16 +232,62 @@ export default function ProfilePage() {
             Account
           </span>
           <div className="rounded-card overflow-hidden bg-surface border border-border shadow-card divide-y divide-divider">
-            {SETTINGS_ROWS.map((row) => (
-              <button
-                key={row.label}
-                className="w-full flex items-center gap-3 px-4 py-3.5 text-sm font-medium text-text hover:bg-surface-alt transition-colors text-left"
-              >
-                <span className="text-base w-5 text-center shrink-0">{row.emoji}</span>
-                <span className="flex-1">{row.label}</span>
-                <ChevronRight />
-              </button>
-            ))}
+            {/* Display name */}
+            <div className="px-4 py-3.5">
+              {editingName ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-base w-5 text-center shrink-0">✏️</span>
+                  <input
+                    autoFocus
+                    value={nameDraft}
+                    onChange={e => setNameDraft(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') setEditingName(false); }}
+                    maxLength={32}
+                    className="flex-1 min-w-0 bg-surface-alt rounded px-2 py-1 text-sm text-text outline-none border border-border focus:border-primary"
+                  />
+                  <button onClick={saveName} className="text-xs font-semibold text-primary px-2 py-1">Save</button>
+                  <button onClick={() => setEditingName(false)} className="text-xs text-text-muted px-2 py-1">Cancel</button>
+                </div>
+              ) : (
+                <button onClick={startEditName} className="w-full flex items-center gap-3 text-sm font-medium text-text text-left">
+                  <span className="text-base w-5 text-center shrink-0">✏️</span>
+                  <span className="flex-1">Display name</span>
+                  <span className="text-xs text-text-muted truncate max-w-[40%]">{settings.displayName}</span>
+                  <ChevronRight />
+                </button>
+              )}
+            </div>
+
+            {/* Notifications */}
+            <div className="px-4 py-3.5 flex items-center gap-3">
+              <span className="text-base w-5 text-center shrink-0">🔔</span>
+              <span className="flex-1 text-sm font-medium text-text">Notifications</span>
+              <Toggle on={settings.notifications} onChange={v => persist({ ...settings, notifications: v })} />
+            </div>
+
+            {/* Public profile */}
+            <div className="px-4 py-3.5 flex items-center gap-3">
+              <span className="text-base w-5 text-center shrink-0">🌐</span>
+              <span className="flex-1 text-sm font-medium text-text">Public profile (leaderboard)</span>
+              <Toggle on={settings.publicProfile} onChange={v => persist({ ...settings, publicProfile: v })} />
+            </div>
+
+            {/* Units */}
+            <div className="px-4 py-3.5 flex items-center gap-3">
+              <span className="text-base w-5 text-center shrink-0">📏</span>
+              <span className="flex-1 text-sm font-medium text-text">Units</span>
+              <div className="flex rounded-pill bg-surface-alt p-0.5">
+                {(['imperial', 'metric'] as const).map(u => (
+                  <button
+                    key={u}
+                    onClick={() => persist({ ...settings, units: u })}
+                    className={`text-xs font-semibold px-3 py-1 rounded-pill transition-colors ${settings.units === u ? 'bg-primary text-white' : 'text-text-muted'}`}
+                  >
+                    {u === 'imperial' ? 'cal/oz' : 'kJ/g'}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
