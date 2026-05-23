@@ -1,6 +1,6 @@
-# FridgeWise
+# EloEats
 
-FridgeWise is a smart fridge app that gamifies healthy eating. The fridge has a built-in camera. It scans its own contents, tracks what gets taken out, scores it nutritionally, and posts everyone's scores to a live leaderboard. Eat well, beat your friends.
+EloEats is a smart fridge app that gamifies healthy eating. The fridge has a built-in camera. It scans its own contents, tracks what gets taken out, scores it nutritionally, and posts everyone's scores to a live leaderboard. Eat well, beat your friends.
 
 Built as a hackathon proof of concept.
 
