@@ -28,7 +28,7 @@ const config: Config = {
         divider: '#eef1ef',     // hairline
       },
       fontFamily: {
-        sans: ['Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
+        sans: ['Switzer', 'Helvetica Neue', 'Helvetica', 'Arial', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['11px', { lineHeight: '16px', letterSpacing: '0.02em' }],
