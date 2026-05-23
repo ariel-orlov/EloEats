@@ -170,6 +170,12 @@ Open `http://localhost:3000` on the device that acts as the fridge. Grant camera
 
 ---
 
+## Demo mode (no credentials)
+
+If the Firebase or OpenAI environment variables are missing, the app automatically falls back to demo mode. In demo mode, API routes return sample data for inventory, history, leaderboard, rewards, and profile so the UI can be fully showcased without any backend setup.
+
+---
+
 ## Design system
 
 Built with Tailwind CSS. Key tokens:

@@ -7,7 +7,8 @@ function AppleLogo() {
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 814 1000"
-      className="w-5 h-5 fill-white shrink-0"
+      className="w-5 h-5 shrink-0"
+      fill="white"
       aria-hidden="true"
     >
       <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-42.8-162.1-140.4C555.6 771.5 472.4 700 398.2 700c-59.6 0-112.8 38.3-165.1 76.7-63 47-124.5 95-187.3 95-25.3 0-49-6.5-70.1-20.1C-24.1 851.5-7.3 799.3 2.7 779c14-29.4 43.5-92.3 43.5-179.9 0-69.8-29.4-147.1-89.8-210.3-5.7-6.1-13.9-14.9-13.9-23.5v-.5c0-9.7 14.9-50.4 43.5-89.4 19.4-26.9 41.5-52.8 66.7-70.4 37.7-26.3 78.5-40.4 121-40.4 42.5 0 80.1 14.4 112.8 42.5 22.6 19.9 42.4 43.8 60 69.8 14.4 21.4 28.5 44.9 44.2 65.4h.7c32.5-47 71.3-94.9 121.7-125.7 47-28.5 98.5-42.4 153.5-42.4 99.3 0 174.1 62.2 213.6 157.6 4.5 10.3 8.3 21.2 10.5 32.5z" />
@@ -47,77 +48,115 @@ export default function LoginPage() {
 
   return (
     <main className="min-h-screen flex flex-col lg:flex-row bg-bg overflow-hidden">
+      <style>{`
+        @keyframes slide-up {
+          from { transform: translateY(48px); opacity: 0; }
+          to   { transform: translateY(0);    opacity: 1; }
+        }
+        @keyframes fade-in-brand {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
 
-      {/* ── Mobile: stacked layout ── */}
-      {/* ── Desktop: left green panel ── */}
+      {/* ── GREEN PANEL: Brand ── */}
       <div
-        className="relative flex flex-col justify-end lg:justify-center overflow-hidden w-full lg:w-1/2 min-h-[45vh] lg:min-h-screen"
+        className="relative flex flex-col w-full lg:w-1/2 min-h-[42vh] lg:min-h-screen overflow-hidden"
         style={{
-          background: 'radial-gradient(ellipse at 30% 40%, #2d8f5e 0%, #1a6b45 55%, #124d32 100%)',
+          background: 'linear-gradient(160deg, #0A3D26 0%, #1B6B45 55%, #2E9060 100%)',
         }}
       >
-        {/* Subtle radial highlight near top-left */}
+        {/* Subtle texture overlay */}
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.10) 0%, transparent 60%)',
+            background: 'radial-gradient(ellipse at 80% 20%, rgba(255,255,255,0.06) 0%, transparent 60%)',
+          }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 20% 90%, rgba(0,0,0,0.15) 0%, transparent 55%)',
           }}
         />
 
-        {/* Wordmark — centered on desktop, bottom-left on mobile */}
-        <div className="relative z-10 px-8 pb-10 lg:px-16 lg:pb-0 lg:text-center">
-          <p className="text-white/60 text-sm font-medium tracking-wide mb-2 lg:mb-3">
+        {/* Mobile: bottom-left anchored. Desktop: centered. */}
+        <div
+          className="
+            relative z-10 flex flex-col
+            px-8 pb-10 pt-12
+            justify-end flex-1
+            lg:justify-center lg:items-center lg:text-center lg:px-12 lg:py-0
+          "
+          style={{ animation: 'fade-in-brand 0.7s cubic-bezier(0.22,1,0.36,1) both' }}
+        >
+          <p
+            className="text-xs uppercase tracking-wider mb-2"
+            style={{ color: 'rgba(255,255,255,0.6)', letterSpacing: '0.12em' }}
+          >
             Your fridge, scored.
           </p>
+
           <h1
-            className="text-white font-extrabold leading-none"
-            style={{ fontSize: 'clamp(40px, 8vw, 64px)', letterSpacing: '-0.03em' }}
+            className="font-extrabold leading-none"
+            style={{
+              fontFamily: '"Bricolage Grotesque", sans-serif',
+              fontSize: 'clamp(44px, 7vw, 72px)',
+              color: '#FFFFFF',
+              letterSpacing: '-0.03em',
+            }}
           >
             FridgeWise
           </h1>
-          <p className="text-white/50 text-sm font-normal mt-3 hidden lg:block">
+
+          {/* Desktop-only tagline */}
+          <p
+            className="hidden lg:block text-sm mt-3"
+            style={{ color: 'rgba(255,255,255,0.5)' }}
+          >
             Eat well. Beat your friends.
           </p>
+
+          {/* Desktop decorative pill row */}
+          <div className="hidden lg:flex items-center gap-1.5 mt-8">
+            <span style={{ display: 'block', width: '6px', height: '3px', borderRadius: '9999px', background: 'rgba(255,255,255,0.25)' }} />
+            <span style={{ display: 'block', width: '22px', height: '3px', borderRadius: '9999px', background: 'rgba(255,255,255,0.6)' }} />
+            <span style={{ display: 'block', width: '6px', height: '3px', borderRadius: '9999px', background: 'rgba(255,255,255,0.25)' }} />
+          </div>
         </div>
       </div>
 
-      {/* ── Mobile: sign-in card slides up with rounded top corners ── */}
-      {/* ── Desktop: right white panel ── */}
+      {/* ── SIGN-IN PANEL ── */}
       <div
         className="
           relative flex flex-1 items-start lg:items-center justify-center
-          bg-bg lg:bg-white
           rounded-t-3xl lg:rounded-none
           -mt-6 lg:mt-0
-          shadow-[0_-4px_24px_rgba(0,0,0,0.07)] lg:shadow-none
-          px-6 pt-8 pb-10 lg:px-12 lg:py-16
-          animate-[slideUp_0.35s_cubic-bezier(0.22,1,0.36,1)_both]
-          lg:animate-none
+          bg-surface
+          px-6 pt-7 pb-12 lg:px-12 lg:py-16
         "
         style={{
-          // keyframe defined inline via style; works as a CSS animation
+          animation: 'slide-up 0.45s cubic-bezier(0.22,1,0.36,1) both',
+          boxShadow: '-4px 0 32px rgba(15,28,20,0.08)',
         }}
       >
-        <style>{`
-          @keyframes slideUp {
-            from { transform: translateY(32px); opacity: 0; }
-            to   { transform: translateY(0);    opacity: 1; }
-          }
-        `}</style>
-
         <div className="w-full max-w-sm">
-          {/* Pill handle — mobile only */}
+          {/* Drag handle pill — mobile only */}
           <div className="lg:hidden w-10 h-1 rounded-full bg-border mx-auto mb-8" />
 
           {/* Heading */}
-          <div className="mb-7">
+          <div className="mb-8">
             <h2
-              className="text-text font-bold leading-tight"
-              style={{ fontSize: '24px', letterSpacing: '-0.02em' }}
+              className="font-bold text-text leading-tight"
+              style={{
+                fontFamily: '"Bricolage Grotesque", sans-serif',
+                fontSize: '26px',
+                letterSpacing: '-0.02em',
+              }}
             >
               Welcome back
             </h2>
-            <p className="text-text-muted text-sm mt-1.5 leading-relaxed">
+            <p className="text-text-muted text-sm mt-1.5">
               Sign in to track your fridge and compete.
             </p>
           </div>
@@ -127,18 +166,38 @@ export default function LoginPage() {
             {/* Apple */}
             <button
               onClick={handleAppleSignIn}
-              className="flex items-center justify-center gap-3 w-full bg-[#000] hover:bg-[#1c1c1e] active:bg-[#111] text-white font-semibold text-[15px] rounded-btn transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              style={{ height: '52px' }}
+              className="flex items-center justify-center gap-3 w-full font-semibold text-[15px] rounded-btn transition-all active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              style={{
+                height: '52px',
+                background: '#000000',
+                color: '#FFFFFF',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#1a1a1a')}
+              onMouseLeave={e => (e.currentTarget.style.background = '#000000')}
             >
               <AppleLogo />
               Sign in with Apple
             </button>
 
+            {/* OR divider */}
+            <div className="flex items-center gap-3 px-1">
+              <div className="flex-1 h-px bg-divider" />
+              <span
+                className="text-text-faint text-xs font-medium"
+                style={{ fontFamily: '"Fira Code", monospace', letterSpacing: '0.08em' }}
+              >
+                OR
+              </span>
+              <div className="flex-1 h-px bg-divider" />
+            </div>
+
             {/* Google */}
             <button
               onClick={handleGoogleSignIn}
-              className="flex items-center justify-center gap-3 w-full bg-surface hover:bg-[#f7f8f7] active:bg-[#f0f2f0] text-text font-semibold text-[15px] rounded-btn border border-border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="flex items-center justify-center gap-3 w-full font-semibold text-[15px] rounded-btn border border-border bg-surface text-text transition-all active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               style={{ height: '52px' }}
+              onMouseEnter={e => (e.currentTarget.style.background = '#F0F5F2')}
+              onMouseLeave={e => (e.currentTarget.style.background = '')}
             >
               <GoogleLogo />
               Sign in with Google
@@ -146,13 +205,17 @@ export default function LoginPage() {
           </div>
 
           {/* Legal */}
-          <p className="text-center mt-6 leading-relaxed" style={{ color: '#9eada8', fontSize: '11px' }}>
+          <p className="text-text-faint text-[11px] text-center mt-5 leading-relaxed">
             By signing in you agree to our{' '}
-            <span className="underline underline-offset-2 cursor-pointer hover:text-text-muted transition-colors">
-              Terms of Service
+            <span
+              className="underline underline-offset-2 cursor-pointer transition-colors hover:text-text-muted"
+            >
+              Terms
             </span>{' '}
             and{' '}
-            <span className="underline underline-offset-2 cursor-pointer hover:text-text-muted transition-colors">
+            <span
+              className="underline underline-offset-2 cursor-pointer transition-colors hover:text-text-muted"
+            >
               Privacy Policy
             </span>
             .

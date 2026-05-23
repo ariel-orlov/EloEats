@@ -2,47 +2,14 @@
 
 import { useState } from 'react';
 import { BottomNav, Sidebar } from '@/components/Nav';
+import {
+  DEMO_ACTIVE_PASS,
+  DEMO_REDEMPTIONS,
+  DEMO_REWARDS,
+  DEMO_REWARDS_STATE,
+} from '@/lib/demo-data';
 
-// ── Mock data ─────────────────────────────────────────────────────────────────
-
-const CREDITS = 47;
-const NEXT_TIER = 60;
-
-const REWARDS = [
-  {
-    id: '5pt',
-    name: '5-point cheat pass',
-    description: 'Your next 5 points of junk food won\'t affect your score.',
-    cost: 30,
-    points: 5,
-  },
-  {
-    id: '10pt',
-    name: '10-point cheat pass',
-    description: 'Your next 10 points of junk food won\'t affect your score.',
-    cost: 60,
-    points: 10,
-  },
-  {
-    id: 'free-day',
-    name: 'Free day pass',
-    description: 'Eat anything today — nothing counts toward your score.',
-    cost: 100,
-    points: null,
-  },
-];
-
-const ACTIVE_PASS = {
-  name: '5-Point Cheat Pass',
-  pointsRemaining: 3,
-};
-
-const HISTORY = [
-  { id: 'h1', date: 'May 18, 2026', reward: '5-point cheat pass', cost: 30 },
-  { id: 'h2', date: 'May 10, 2026', reward: '10-point cheat pass', cost: 60 },
-];
-
-// ── Icons ─────────────────────────────────────────────────────────────────────
+type Reward = (typeof DEMO_REWARDS)[0];
 
 function LockIcon() {
   return (
@@ -79,34 +46,31 @@ function CheckIcon() {
   );
 }
 
-// ── Confirmation modal ────────────────────────────────────────────────────────
-
 function ConfirmModal({
   reward,
   credits,
   onConfirm,
   onCancel,
 }: {
-  reward: (typeof REWARDS)[0];
+  reward: Reward;
   credits: number;
   onConfirm: () => void;
   onCancel: () => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-surface rounded-2xl shadow-card-md w-full max-w-sm p-6 flex flex-col gap-5">
-        <div className="flex flex-col gap-1.5">
-          <h2 className="text-text font-bold text-lg">Redeem reward?</h2>
-          <p className="text-text-muted text-sm leading-relaxed">
-            You're about to redeem{' '}
-            <span className="font-semibold text-text">{reward.name}</span> for{' '}
-            <span className="font-semibold text-primary">{reward.cost} health credits</span>.
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/50">
+      <div className="w-full max-w-sm rounded-card bg-surface border border-border shadow-card-lg p-6 flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-display text-lg text-text">Redeem this reward?</h2>
+          <p className="text-sm text-text-muted">
+            You are about to redeem <span className="font-semibold text-text">{reward.name}</span> for{' '}
+            <span className="font-semibold text-primary">{reward.cost} credits</span>.
           </p>
         </div>
 
-        <div className="bg-[#f7f8f7] rounded-btn p-4 flex items-center justify-between">
-          <span className="text-text-muted text-sm">Balance after</span>
-          <span className="font-bold text-text text-base">
+        <div className="rounded-btn bg-surface-alt border border-border px-4 py-3 flex items-center justify-between">
+          <span className="text-xs text-text-muted">Balance after</span>
+          <span className="font-semibold text-sm text-text font-mono-data">
             {credits - reward.cost} credits
           </span>
         </div>
@@ -114,13 +78,13 @@ function ConfirmModal({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-btn bg-[#f7f8f7] px-4 py-2.5 text-sm font-semibold text-text-muted hover:bg-[#eef1ef] transition-colors"
+            className="flex-1 rounded-btn px-4 py-2.5 text-sm font-semibold border border-border text-text-muted bg-surface hover:bg-surface-alt transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-btn bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 active:opacity-90 transition-opacity"
+            className="flex-1 rounded-btn px-4 py-2.5 text-sm font-semibold text-white bg-primary hover:bg-primary-hover transition-colors"
           >
             Confirm
           </button>
@@ -130,18 +94,19 @@ function ConfirmModal({
   );
 }
 
-// ── Main page ─────────────────────────────────────────────────────────────────
-
 export default function RewardsPage() {
-  const [credits, setCredits] = useState(CREDITS);
-  const [confirmTarget, setConfirmTarget] = useState<(typeof REWARDS)[0] | null>(null);
+  const [credits, setCredits] = useState(DEMO_REWARDS_STATE.credits);
+  const [confirmTarget, setConfirmTarget] = useState<Reward | null>(null);
   const [redeemedIds, setRedeemedIds] = useState<string[]>([]);
-  const [activePass] = useState(ACTIVE_PASS);
+  const [activePass] = useState(DEMO_ACTIVE_PASS);
 
-  const progressPct = Math.min((credits / NEXT_TIER) * 100, 100);
-  const remaining = Math.max(0, NEXT_TIER - credits);
+  const progressPct = Math.min((credits / DEMO_REWARDS_STATE.nextTier) * 100, 100);
+  const remaining = Math.max(0, DEMO_REWARDS_STATE.nextTier - credits);
+  const totalMeals = DEMO_REWARDS_STATE.healthyCountThisWeek + DEMO_REWARDS_STATE.indulgentCountThisWeek;
+  const healthyPct = totalMeals > 0 ? Math.round((DEMO_REWARDS_STATE.healthyCountThisWeek / totalMeals) * 100) : 0;
+  const indulgentPct = 100 - healthyPct;
 
-  function handleRedeemClick(reward: (typeof REWARDS)[0]) {
+  function handleRedeemClick(reward: Reward) {
     if (credits < reward.cost) return;
     setConfirmTarget(reward);
   }
@@ -153,108 +118,150 @@ export default function RewardsPage() {
     setConfirmTarget(null);
   }
 
-  function handleCancel() {
-    setConfirmTarget(null);
-  }
-
   return (
     <>
       <Sidebar />
       <BottomNav />
 
-      <main className="pl-0 lg:pl-16 pb-20 lg:pb-0 min-h-screen bg-[#f7f8f7]">
-        {/* Sticky header */}
-        <header className="sticky top-0 z-40 bg-[#f7f8f7]/95 backdrop-blur-sm border-b border-[#e8ece9] px-4 lg:px-8 py-4 flex items-center">
-          <h1 className="text-[#111b14] font-bold text-xl tracking-tight">Rewards</h1>
+      <main className="pl-0 lg:pl-16 pb-20 lg:pb-0 min-h-screen bg-bg">
+        <header className="sticky top-0 z-40 px-4 lg:px-8 py-4 bg-bg/95 backdrop-blur-md border-b border-divider">
+          <h1 className="text-xl font-display text-text">Rewards and balance</h1>
         </header>
 
-        <div className="px-4 lg:px-8 py-6 flex flex-col gap-6 max-w-2xl">
-
-          {/* ── 1. Balance card ── */}
-          <div className="bg-gradient-to-br from-[#1a6b45] to-[#2d9b6a] rounded-[14px] p-6 flex flex-col gap-4">
-            <div className="flex flex-col gap-1">
-              <span
-                className="text-[56px] font-extrabold text-white leading-none"
-                aria-label={`${credits} health credits`}
-              >
-                {credits}
-              </span>
-              <span className="text-[#e8f5ee] text-sm">health credits</span>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-white transition-all duration-500"
-                  style={{ width: `${progressPct}%` }}
-                />
+        <div className="px-4 lg:px-8 py-6 flex flex-col gap-6 max-w-3xl">
+          <section className="grid gap-4">
+            <div className="rounded-card bg-surface shadow-card p-5 flex flex-col gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs uppercase tracking-wider text-text-faint font-semibold">
+                    Balance score
+                  </span>
+                  <span className="font-display text-3xl text-text">
+                    {DEMO_REWARDS_STATE.balanceScore}
+                  </span>
+                  <span className="text-sm text-text-muted">
+                    {DEMO_REWARDS_STATE.balanceStreakDays}-day balanced streak
+                  </span>
+                </div>
+                <span className="rounded-pill bg-primary-light text-primary text-xs font-semibold px-3 py-1">
+                  {DEMO_REWARDS_STATE.balancedDaysThisWeek} balanced days this week
+                </span>
               </div>
-              <span className="text-[#e8f5ee] text-xs">
-                {remaining} until your next reward
-              </span>
-            </div>
-          </div>
 
-          {/* ── 2. Active pass banner ── */}
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between text-xs text-text-muted">
+                  <span>Healthy {DEMO_REWARDS_STATE.healthyCountThisWeek}</span>
+                  <span>Indulgent {DEMO_REWARDS_STATE.indulgentCountThisWeek}</span>
+                </div>
+                <div className="h-2 rounded-pill overflow-hidden bg-surface-alt border border-border">
+                  <div className="flex h-full w-full">
+                    <div
+                      className="bg-primary"
+                      style={{ width: `${healthyPct}%` }}
+                      aria-label={`${healthyPct}% healthy`}
+                    />
+                    <div
+                      className="bg-amber"
+                      style={{ width: `${indulgentPct}%` }}
+                      aria-label={`${indulgentPct}% indulgent`}
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-text-muted">
+                  Keep indulgent meals to {DEMO_REWARDS_STATE.indulgenceCap} per day to earn flex credits.
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-card bg-surface shadow-card p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <span className="text-xs uppercase tracking-wider text-text-faint font-semibold">
+                    Health credits
+                  </span>
+                  <p className="font-display text-3xl text-primary">{credits}</p>
+                </div>
+                <span className="text-sm text-text-muted">
+                  Next tier at {DEMO_REWARDS_STATE.nextTier}
+                </span>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <div className="h-2 rounded-pill bg-surface-alt border border-border overflow-hidden">
+                  <div
+                    className="h-full bg-primary"
+                    style={{ width: `${progressPct}%` }}
+                  />
+                </div>
+                <span className="text-xs text-text-muted">
+                  {remaining} credits to unlock the next flex pass.
+                </span>
+              </div>
+            </div>
+
+            <div className="rounded-card bg-surface-alt border border-border p-4 flex flex-col gap-2">
+              <p className="text-sm font-semibold text-text">How flex credits work</p>
+              <p className="text-xs text-text-muted">
+                Log at least 3 positive foods and no more than 1 indulgence in a day. Each balanced
+                day earns 10 credits. Flex passes let you enjoy treats without hurting your 30-day
+                average.
+              </p>
+            </div>
+          </section>
+
           {activePass && (
-            <div className="bg-[#fff9ed] border border-[#f59e0b]/30 rounded-[14px] px-4 py-3.5 flex items-center gap-3">
-              <span className="text-[28px] leading-none shrink-0" aria-hidden="true">🔥</span>
-              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                <span className="text-[#111b14] font-semibold text-sm leading-snug">
-                  Cheat pass active
-                </span>
-                <span className="text-[#6a7870] text-sm">
-                  {activePass.pointsRemaining} pts left · expires tonight
-                </span>
+            <div className="rounded-card bg-primary-light border border-border px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-primary">Flex pass active</p>
+                <p className="text-xs text-text-muted">
+                  {activePass.pointsRemaining} points left - {activePass.expiresLabel}
+                </p>
               </div>
+              <span className="rounded-pill bg-white px-3 py-1 text-xs font-semibold text-primary">
+                Balance first, then enjoy
+              </span>
             </div>
           )}
 
-          {/* ── 3. Available rewards ── */}
           <section className="flex flex-col gap-2">
-            <span className="text-[#6a7870] text-sm font-medium px-0.5">Available rewards</span>
-            <div className="bg-white rounded-[14px] shadow-card overflow-hidden">
-              {REWARDS.map((reward, i) => {
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-faint">
+              Available rewards
+            </span>
+            <div className="rounded-card overflow-hidden bg-surface border border-border shadow-card">
+              {DEMO_REWARDS.map((reward, i) => {
                 const canAfford = credits >= reward.cost;
                 const alreadyRedeemed = redeemedIds.includes(reward.id);
-                const isLast = i === REWARDS.length - 1;
+                const isLast = i === DEMO_REWARDS.length - 1;
 
                 return (
                   <div
                     key={reward.id}
-                    className={`flex items-center gap-4 px-4 py-4 ${!isLast ? 'border-b border-[#eef1ef]' : ''}`}
+                    className="flex items-center gap-4 px-4 py-4"
+                    style={!isLast ? { borderBottom: '1px solid #ECF3EE' } : undefined}
                   >
-                    {/* Text block */}
                     <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                      <span className="text-[#111b14] font-semibold text-sm leading-snug">
-                        {reward.name}
-                      </span>
-                      <span className="text-[#9eada8] text-xs leading-relaxed">
-                        {reward.description}
-                      </span>
+                      <span className="font-semibold text-sm text-text">{reward.name}</span>
+                      <span className="text-xs text-text-muted">{reward.description}</span>
                     </div>
 
-                    {/* Right side */}
-                    <div className="shrink-0 flex flex-col items-end gap-1.5">
-                      <span className="text-[#6a7870] text-sm">{reward.cost} credits</span>
+                    <div className="shrink-0 flex flex-col items-end gap-2">
+                      <span className="text-xs font-mono-data text-text-muted">
+                        {reward.cost} credits
+                      </span>
                       {alreadyRedeemed ? (
-                        <span className="inline-flex items-center gap-1 rounded-[10px] bg-[#e8f5ee] text-[#1a6b45] px-3 py-1.5 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1 rounded-pill px-3 py-1 text-xs font-semibold bg-primary-light text-primary">
                           <CheckIcon />
                           Redeemed
                         </span>
                       ) : canAfford ? (
                         <button
                           onClick={() => handleRedeemClick(reward)}
-                          className="bg-[#e8f5ee] text-[#1a6b45] text-xs font-semibold px-3 py-1.5 rounded-[10px] hover:bg-[#d4eddf] transition-colors"
-                          aria-label={`Redeem ${reward.name} for ${reward.cost} credits`}
+                          className="text-xs font-semibold px-3 py-1 rounded-pill bg-primary-light text-primary hover:bg-primary/20 transition-colors"
                         >
                           Redeem
                         </button>
                       ) : (
-                        <span
-                          className="text-[#9eada8] inline-flex items-center"
-                          aria-label={`Not enough credits for ${reward.name}`}
-                        >
+                        <span className="inline-flex items-center text-text-faint">
                           <LockIcon />
                         </span>
                       )}
@@ -265,38 +272,40 @@ export default function RewardsPage() {
             </div>
           </section>
 
-          {/* ── 4. Past redemptions ── */}
           <section className="flex flex-col gap-2">
-            <span className="text-[#6a7870] text-sm font-medium px-0.5">Past redemptions</span>
-            <div className="bg-white rounded-[14px] shadow-card overflow-hidden">
-              {HISTORY.map((item, i) => {
-                const isLast = i === HISTORY.length - 1;
+            <span className="text-xs font-semibold uppercase tracking-wider text-text-faint">
+              Past redemptions
+            </span>
+            <div className="rounded-card overflow-hidden bg-surface border border-border shadow-card">
+              {DEMO_REDEMPTIONS.map((item, i) => {
+                const isLast = i === DEMO_REDEMPTIONS.length - 1;
                 return (
                   <div
                     key={item.id}
-                    className={`flex items-center justify-between px-4 py-4 ${!isLast ? 'border-b border-[#eef1ef]' : ''}`}
+                    className="flex items-center justify-between px-4 py-4"
+                    style={!isLast ? { borderBottom: '1px solid #ECF3EE' } : undefined}
                   >
-                    <span className="text-[#111b14] font-semibold text-sm">{item.reward}</span>
+                    <span className="font-medium text-sm text-text-muted">{item.reward}</span>
                     <div className="flex flex-col items-end gap-0.5 shrink-0 ml-4">
-                      <span className="text-[#9eada8] text-xs">{item.date}</span>
-                      <span className="text-[#9eada8] text-xs">−{item.cost} credits</span>
+                      <span className="text-xs text-text-faint">{item.date}</span>
+                      <span className="text-xs font-mono-data text-text-faint">
+                        -{item.cost} credits
+                      </span>
                     </div>
                   </div>
                 );
               })}
             </div>
           </section>
-
         </div>
       </main>
 
-      {/* Redeem confirmation modal */}
       {confirmTarget && (
         <ConfirmModal
           reward={confirmTarget}
           credits={credits}
           onConfirm={handleConfirm}
-          onCancel={handleCancel}
+          onCancel={() => setConfirmTarget(null)}
         />
       )}
     </>

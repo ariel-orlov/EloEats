@@ -22,7 +22,7 @@ export default function FridgeCam({ onCapture, label = 'Capture' }: Props) {
           setReady(true);
         }
       })
-      .catch(() => setError('Camera access denied. Grant permission or use upload fallback.'));
+      .catch(() => setError('Camera access denied. Grant permission to continue.'));
 
     return () => {
       if (videoRef.current?.srcObject) {
@@ -40,13 +40,15 @@ export default function FridgeCam({ onCapture, label = 'Capture' }: Props) {
     canvas.height = video.videoHeight;
     canvas.getContext('2d')!.drawImage(video, 0, 0);
     const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-    onCapture(dataUrl.split(',')[1]); // strip data: prefix
+    onCapture(dataUrl.split(',')[1]);
   }, [onCapture]);
 
   return (
-    <div style={{ position: 'relative', background: '#000', borderRadius: 12, overflow: 'hidden' }}>
+    <div style={{ position: 'relative', background: '#0F1C14', borderRadius: 16, overflow: 'hidden' }}>
       {error ? (
-        <div style={{ padding: 24, color: '#fff', fontSize: 14 }}>{error}</div>
+        <div style={{ padding: '24px', color: '#96AEA7', fontSize: 14, lineHeight: 1.5 }}>
+          {error}
+        </div>
       ) : (
         <video
           ref={videoRef}
@@ -62,16 +64,20 @@ export default function FridgeCam({ onCapture, label = 'Capture' }: Props) {
           onClick={capture}
           style={{
             position: 'absolute',
-            bottom: 16,
+            bottom: 20,
             left: '50%',
             transform: 'translateX(-50%)',
-            background: 'var(--green)',
-            color: '#fff',
+            background: 'linear-gradient(135deg, #1B6B45 0%, #2E9060 100%)',
+            color: '#ffffff',
             border: 'none',
-            borderRadius: 8,
-            padding: '10px 28px',
-            fontWeight: 600,
+            borderRadius: 12,
+            padding: '12px 32px',
+            fontWeight: 700,
             fontSize: 15,
+            fontFamily: '"DM Sans", sans-serif',
+            cursor: 'pointer',
+            boxShadow: '0 2px 12px rgba(27,107,69,0.4)',
+            letterSpacing: '-0.01em',
           }}
         >
           {label}

@@ -9,7 +9,16 @@ export default function ScoreBadge({ score, size = 'md' }: Props) {
 
   if (size === 'lg') {
     return (
-      <span className={`inline-flex items-center gap-1 tabular-nums font-extrabold tracking-tight text-3xl ${pos ? 'text-primary' : 'text-negative'}`}>
+      <span
+        className="inline-flex items-center tabular-nums font-extrabold"
+        style={{
+          fontFamily: '"Bricolage Grotesque", ui-sans-serif, sans-serif',
+          fontSize: '56px',
+          letterSpacing: '-0.04em',
+          lineHeight: 1,
+          color: pos ? '#16A34A' : '#DC2626',
+        }}
+      >
         {label}
       </span>
     );
@@ -17,19 +26,28 @@ export default function ScoreBadge({ score, size = 'md' }: Props) {
 
   if (size === 'sm') {
     return (
-      <span className={`inline-flex items-center tabular-nums font-semibold text-xs ${pos ? 'text-primary' : 'text-negative'}`}>
+      <span
+        className="inline-flex items-center tabular-nums font-semibold text-xs"
+        style={{
+          fontFamily: '"Fira Code", ui-monospace, monospace',
+          color: pos ? '#16A34A' : '#DC2626',
+        }}
+      >
         {label}
       </span>
     );
   }
 
-  // md — used in lists: subtle background, no pill shape, just a tight rounded rect
+  // md
   return (
-    <span className={`inline-flex items-center tabular-nums font-bold text-sm rounded-[6px] px-2 py-0.5 ${
-      pos
-        ? 'bg-primary-light text-primary'
-        : 'bg-red-50 text-negative'
-    }`}>
+    <span
+      className="inline-flex items-center tabular-nums font-bold text-sm rounded-[8px] px-2 py-0.5"
+      style={{
+        fontFamily: '"Fira Code", ui-monospace, monospace',
+        background: pos ? '#D8EEE5' : '#FEE2E2',
+        color: pos ? '#166534' : '#DC2626',
+      }}
+    >
       {label}
     </span>
   );

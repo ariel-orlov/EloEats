@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { BottomNav, Sidebar } from '@/components/Nav';
 import FridgeCam from '@/components/FridgeCam';
 import FoodCard from '@/components/FoodCard';
 import type { FoodItem } from '@/types';
+import { DEMO_INVENTORY, DEMO_USER } from '@/lib/demo-data';
 
 // ────────────────────────────────────────────────────────────────────────────
 // Types
@@ -19,11 +20,9 @@ type CamMode = 'inventory' | 'diff';
 function ScoreRing({ score }: { score: number }) {
   const radius = 20;
   const circumference = 2 * Math.PI * radius;
-  // Clamp fill between 0–100% of the ring
   const fillRatio = Math.min(Math.abs(score) / 100, 1);
   const dashOffset = circumference * (1 - fillRatio);
   const positive = score >= 0;
-  const strokeColor = positive ? '#1a6b45' : '#d93025';
 
   return (
     <svg
@@ -39,7 +38,7 @@ function ScoreRing({ score }: { score: number }) {
         cy="28"
         r={radius}
         fill="none"
-        stroke="#eef1ef"
+        stroke="#ECF3EE"
         strokeWidth="5"
       />
       {/* Fill */}
@@ -48,13 +47,15 @@ function ScoreRing({ score }: { score: number }) {
         cy="28"
         r={radius}
         fill="none"
-        stroke={strokeColor}
+        stroke={positive ? '#16A34A' : '#DC2626'}
         strokeWidth="5"
         strokeLinecap="round"
         strokeDasharray={circumference}
         strokeDashoffset={dashOffset}
         transform="rotate(-90 28 28)"
-        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+        style={{
+          transition: 'stroke-dashoffset 0.6s ease',
+        }}
       />
     </svg>
   );
@@ -67,18 +68,15 @@ function ScoreRing({ score }: { score: number }) {
 function ScoreHeader({ score }: { score: number }) {
   const positive = score >= 0;
   return (
-    <div className="bg-surface rounded-card shadow-card px-5 py-5 flex items-center justify-between">
+    <div className="bg-surface rounded-card shadow-card-md px-5 py-5 flex items-center justify-between">
       <div>
-        <p className="text-text-faint text-xs font-medium" style={{ letterSpacing: '0' }}>
+        <p className="text-text-faint text-xs font-medium">
           Today&apos;s score
         </p>
         <p
-          className="font-extrabold tabular-nums leading-none mt-1"
-          style={{
-            fontSize: '48px',
-            letterSpacing: '-0.03em',
-            color: positive ? '#111b14' : '#d93025',
-          }}
+          className={`font-display tabular-nums leading-none mt-1.5 text-[52px] tracking-[-0.04em] ${
+            positive ? 'text-positive' : 'text-negative'
+          }`}
         >
           {positive ? '+' : ''}{score}
         </p>
@@ -95,17 +93,17 @@ function ScoreHeader({ score }: { score: number }) {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+    <div className="flex flex-col items-center justify-center py-16">
       <div className="bg-surface rounded-card shadow-card p-8 max-w-xs w-full flex flex-col items-center gap-4">
         <svg
           viewBox="0 0 64 88"
-          className="w-20 h-28 text-primary-mid"
+          className="w-20 h-28"
           fill="none"
-          stroke="currentColor"
-          strokeWidth="2.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           aria-hidden="true"
+          stroke="#DDE8E2"
+          strokeWidth="2.5"
         >
           <rect x="8" y="2" width="48" height="84" rx="6" />
           <line x1="8" y1="30" x2="56" y2="30" />
@@ -113,10 +111,16 @@ function EmptyState() {
           <line x1="20" y1="46" x2="20" y2="70" strokeWidth="3" />
         </svg>
 
-        <div>
-          <p className="text-text font-semibold text-base">Your fridge looks empty.</p>
+        <div className="text-center">
+          <p className="text-text font-semibold text-base">
+            Your fridge looks empty.
+          </p>
           <p className="text-text-muted text-sm mt-1">
-            Tap <span className="font-medium text-primary">Scan Inventory</span> to get started.
+            Tap{' '}
+            <span className="text-primary font-medium">
+              Scan Inventory
+            </span>{' '}
+            to get started.
           </p>
         </div>
       </div>
@@ -131,7 +135,7 @@ function EmptyState() {
 function Spinner() {
   return (
     <svg
-      className="animate-spin w-4 h-4 text-primary flex-shrink-0"
+      className="animate-spin w-4 h-4 flex-shrink-0 text-primary"
       viewBox="0 0 24 24"
       fill="none"
       aria-hidden="true"
@@ -145,6 +149,19 @@ function Spinner() {
     </svg>
   );
 }
+
+// ────────────────────────────────────────────────────────────────────────────
+// Section label style
+// ────────────────────────────────────────────────────────────────────────────
+
+const sectionLabelStyle: React.CSSProperties = {
+  fontFamily: '"Bricolage Grotesque", sans-serif',
+  fontSize: '13px',
+  fontWeight: 600,
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+  color: '#96AEA7',
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // Main Page
@@ -161,6 +178,38 @@ export default function HomePage() {
   const totalScore = inventory.reduce((acc, item) => acc + item.score, 0);
   const hasInventory = inventory.length > 0;
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadInventory() {
+      try {
+        const res = await fetch('/api/scan');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+
+        if (Array.isArray(data.items) && data.items.length > 0) {
+          setInventory(data.items);
+          return;
+        }
+
+        if (data.demo) {
+          setInventory(DEMO_INVENTORY);
+        }
+      } catch {
+        if (active) {
+          setInventory(DEMO_INVENTORY);
+        }
+      }
+    }
+
+    loadInventory();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // ── Open camera ──────────────────────────────────────────────────────────
 
   const openCam = useCallback((mode: CamMode) => {
@@ -176,7 +225,7 @@ export default function HomePage() {
       setShowCam(false);
       setScanning(true);
       setConsumed([]);
-      setStatus(camMode === 'inventory' ? 'Identifying fridge contents…' : 'Detecting what was consumed…');
+      setStatus(camMode === 'inventory' ? 'Identifying fridge contents...' : 'Detecting what was consumed...');
 
       try {
         const scanRes = await fetch('/api/scan', {
@@ -210,8 +259,8 @@ export default function HomePage() {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                userId: 'demo-user-1',
-                displayName: 'Demo User',
+                userId: DEMO_USER.id,
+                displayName: DEMO_USER.displayName,
                 items: consumedItems,
               }),
             });
@@ -248,8 +297,18 @@ export default function HomePage() {
       <div className="pl-0 lg:pl-16 pb-20 lg:pb-0">
 
         {/* Sticky mobile top header */}
-        <header className="sticky top-0 z-40 bg-surface border-b border-border px-4 py-3 flex items-center lg:hidden">
-          <h1 className="text-lg font-bold text-text tracking-tight">FridgeWise</h1>
+        <header
+          className="sticky top-0 z-40 px-4 py-3 flex items-center lg:hidden bg-surface/95 backdrop-blur-md border-b border-divider"
+        >
+          <h1
+            className="font-bold text-text"
+            style={{
+              fontFamily: '"Bricolage Grotesque", sans-serif',
+              fontSize: '18px',
+            }}
+          >
+            FridgeWise
+          </h1>
         </header>
 
         <main className="max-w-3xl mx-auto px-4 pt-6 pb-8 space-y-5">
@@ -262,8 +321,7 @@ export default function HomePage() {
             <button
               onClick={() => openCam('inventory')}
               disabled={scanning}
-              className="flex-1 bg-primary text-white font-semibold text-sm rounded-btn shadow-card hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{ height: '48px' }}
+              className="flex-1 bg-primary text-white font-semibold text-sm rounded-btn h-12 shadow-card transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary-hover"
             >
               Scan Inventory
             </button>
@@ -271,8 +329,7 @@ export default function HomePage() {
             <button
               onClick={() => openCam('diff')}
               disabled={scanning || !hasInventory}
-              className="flex-1 bg-surface text-text font-semibold text-sm rounded-btn border border-border hover:bg-[#f4f6f4] active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ height: '48px' }}
+              className="flex-1 bg-surface text-text font-semibold text-sm rounded-btn h-12 border border-border transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-alt"
             >
               Log Consumed
             </button>
@@ -285,10 +342,10 @@ export default function HomePage() {
                 onCapture={handleCapture}
                 label={camMode === 'inventory' ? 'Scan Inventory' : 'Log Consumed'}
               />
-              <div className="p-3 flex justify-end bg-surface">
+              <div className="p-3 flex justify-end bg-surface-alt border-t border-divider">
                 <button
                   onClick={() => setShowCam(false)}
-                  className="text-sm text-text-muted hover:text-text transition-colors"
+                  className="text-sm text-text-muted transition-colors hover:text-text"
                 >
                   Cancel
                 </button>
@@ -298,7 +355,7 @@ export default function HomePage() {
 
           {/* 4. Loading / status row */}
           {(scanning || status) && (
-            <div className="flex items-center gap-2.5 bg-surface border border-border rounded-btn px-4 py-3 shadow-card">
+            <div className="bg-surface border border-border rounded-btn px-4 py-3 flex items-center gap-2.5 shadow-card">
               {scanning && <Spinner />}
               <p className="text-sm text-text-muted">{status}</p>
             </div>
@@ -312,15 +369,14 @@ export default function HomePage() {
 
               {hasInventory && (
                 <div>
-                  <p className="text-text-muted font-medium mb-2" style={{ fontSize: '13px' }}>
+                  <p className="mb-2" style={sectionLabelStyle}>
                     In your fridge
                   </p>
-                  {/* Unified list card — one container, rows separated by hairlines */}
                   <div className="bg-surface rounded-card shadow-card overflow-hidden">
                     {inventory.map((item, i) => (
                       <div
                         key={`${item.name}-${i}`}
-                        className={i < inventory.length - 1 ? 'border-b border-divider' : ''}
+                        className={i < inventory.length - 1 ? 'border-b border-divider' : undefined}
                       >
                         <FoodCard item={item} consumed={false} />
                       </div>
@@ -331,14 +387,14 @@ export default function HomePage() {
 
               {consumed.length > 0 && (
                 <div>
-                  <p className="text-text-muted font-medium mb-2" style={{ fontSize: '13px' }}>
+                  <p className="mb-2" style={sectionLabelStyle}>
                     Just consumed
                   </p>
                   <div className="bg-surface rounded-card shadow-card overflow-hidden">
                     {consumed.map((item, i) => (
                       <div
                         key={`consumed-${item.name}-${i}`}
-                        className={i < consumed.length - 1 ? 'border-b border-divider' : ''}
+                        className={i < consumed.length - 1 ? 'border-b border-divider' : undefined}
                       >
                         <FoodCard item={item} consumed={true} />
                       </div>

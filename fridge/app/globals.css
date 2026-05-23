@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 @import url('https://api.fontshare.com/v2/css?f[]=switzer@300,400,500,600,700,800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Fira+Code:wght@400;500;600&display=swap');
 
 @layer base {
   html {
@@ -15,11 +16,20 @@
 }
 
 @layer utilities {
-  .score-positive { @apply text-primary font-bold; }
-  .score-negative { @apply text-negative font-bold; }
-
-  /* Hairline divider — thinner than Tailwind's divide */
-  .divide-hairline > * + * {
-    border-top: 1px solid #eef1ef;
+  .font-display {
+    font-family: 'Bricolage Grotesque', ui-sans-serif, sans-serif;
   }
+
+  .font-mono-data {
+    font-family: 'Fira Code', ui-monospace, monospace;
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+  }
+
+  .divide-hairline > * + * {
+    border-top: 1px solid theme('colors.divider');
+  }
+
+  .score-positive { @apply text-positive font-bold; }
+  .score-negative { @apply text-negative font-bold; }
 }

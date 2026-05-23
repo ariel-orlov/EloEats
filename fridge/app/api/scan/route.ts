@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { identifyFridgeContents, detectConsumedItems } from '@/lib/openai';
 import { db } from '@/lib/firebase-admin';
+import { isDemoMode } from '@/lib/demo-mode';
+import { DEMO_CONSUMED, DEMO_INVENTORY } from '@/lib/demo-data';
 import type { FridgeSnapshot } from '@/types';
 
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -80,6 +82,17 @@ export async function POST(req: NextRequest) {
   const { image, mode } = validated;
 
   try {
+    if (isDemoMode) {
+      if (mode === 'inventory') {
+        return NextResponse.json({ snapshotId: 'demo-snapshot', items: DEMO_INVENTORY, demo: true });
+      }
+      return NextResponse.json({ consumed: DEMO_CONSUMED, demo: true });
+    }
+
+    if (!db) {
+      return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+    }
+
     if (mode === 'inventory') {
       const items = await identifyFridgeContents(image);
       let snapshotId: string | null = null;
@@ -125,6 +138,14 @@ export async function POST(req: NextRequest) {
 
 // GET /api/scan — returns the current fridge inventory (last snapshot)
 export async function GET() {
+  if (isDemoMode) {
+    return NextResponse.json({ items: DEMO_INVENTORY, snapshotId: 'demo-snapshot', demo: true });
+  }
+
+  if (!db) {
+    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+  }
+
   const snap = await db.collection('snapshots').orderBy('capturedAt', 'desc').limit(1).get();
   if (snap.empty) return NextResponse.json({ items: [] });
   return NextResponse.json({ items: snap.docs[0].data().items, snapshotId: snap.docs[0].id });

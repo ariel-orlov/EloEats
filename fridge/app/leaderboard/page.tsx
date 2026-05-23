@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { BottomNav, Sidebar } from '@/components/Nav';
-
-// ── Types ──────────────────────────────────────────────────────────────────
+import type { LeaderboardEntry } from '@/types';
+import { DEMO_LEADERBOARD_GLOBAL, DEMO_LEADERBOARD_NEARBY, DEMO_USER } from '@/lib/demo-data';
 
 interface LeaderboardUser {
   id: string;
@@ -13,39 +13,21 @@ interface LeaderboardUser {
   isCurrentUser?: boolean;
 }
 
-// ── Mock data ──────────────────────────────────────────────────────────────
+function toLeaderboardUser(entry: LeaderboardEntry): LeaderboardUser {
+  const isCurrentUser = entry.userId === DEMO_USER.id;
+  return {
+    id: entry.userId,
+    name: isCurrentUser ? 'You' : entry.displayName,
+    avgScore: entry.avgScore,
+    streakDays: entry.streakDays,
+    isCurrentUser,
+  };
+}
 
-const GLOBAL_USERS: LeaderboardUser[] = [
-  { id: '1',  name: 'Sophia Chen',     avgScore: 94.2, streakDays: 21 },
-  { id: '2',  name: 'Marcus Rivera',   avgScore: 91.7, streakDays: 14 },
-  { id: '3',  name: 'Priya Sharma',    avgScore: 88.5, streakDays: 30 },
-  { id: 'me', name: 'You',             avgScore: 85.1, streakDays: 7,  isCurrentUser: true },
-  { id: '5',  name: 'Jordan Lee',      avgScore: 82.4, streakDays: 5  },
-  { id: '6',  name: 'Anika Patel',     avgScore: 79.8, streakDays: 11 },
-  { id: '7',  name: 'Tom Okafor',      avgScore: 76.3, streakDays: 3  },
-  { id: '8',  name: 'Camille Dubois',  avgScore: 73.0, streakDays: 8  },
-  { id: '9',  name: 'Eli Nakamura',    avgScore: 69.5, streakDays: 2  },
-  { id: '10', name: 'Sara Müller',     avgScore: 65.2, streakDays: 0  },
-];
+const DEMO_GLOBAL_USERS: LeaderboardUser[] = DEMO_LEADERBOARD_GLOBAL.map(toLeaderboardUser);
+const DEMO_NEARBY_USERS: LeaderboardUser[] = DEMO_LEADERBOARD_NEARBY.map(toLeaderboardUser);
 
-const NEARBY_USERS: LeaderboardUser[] = [
-  { id: '5',  name: 'Jordan Lee',      avgScore: 88.0, streakDays: 5  },
-  { id: 'me', name: 'You',             avgScore: 85.1, streakDays: 7,  isCurrentUser: true },
-  { id: '7',  name: 'Tom Okafor',      avgScore: 80.6, streakDays: 3  },
-  { id: '8',  name: 'Camille Dubois',  avgScore: 71.2, streakDays: 8  },
-  { id: '9',  name: 'Eli Nakamura',    avgScore: 66.4, streakDays: 2  },
-];
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-const AVATAR_COLORS = [
-  '#52b788',
-  '#40916c',
-  '#74c69d',
-  '#95d5b2',
-  '#b7e4c7',
-  '#2d6a4f',
-];
+const AVATAR_COLORS = ['#1B6B45', '#2E9060', '#3F8A5B', '#155638', '#5BA97C', '#0F3E27'];
 
 function avatarColor(name: string): string {
   let hash = 0;
@@ -63,27 +45,39 @@ function initials(name: string): string {
     .join('');
 }
 
-// ── Sub-components ─────────────────────────────────────────────────────────
-
 function RankNumber({ rank }: { rank: number }) {
-  let color = 'text-text-faint';
-  if (rank === 1) color = 'text-[#F59E0B]';
-  else if (rank === 2) color = 'text-[#94A3B8]';
-  else if (rank === 3) color = 'text-[#B45309]';
+  let color = '#96AEA7';
+  let shadow: string | undefined;
+
+  if (rank === 1) {
+    color = '#F59E0B';
+    shadow = '0 2px 12px rgba(245,158,11,0.45)';
+  } else if (rank === 2) {
+    color = '#94A3B8';
+  } else if (rank === 3) {
+    color = '#B45309';
+  }
 
   return (
-    <span className={`w-6 text-center font-bold text-base tabular-nums shrink-0 ${color}`}>
+    <span
+      className="w-6 text-center font-bold text-base tabular-nums shrink-0"
+      style={{ color, ...(shadow ? { textShadow: shadow } : {}) }}
+    >
       {rank}
     </span>
   );
 }
 
-function AvatarCircle({ name }: { name: string }) {
-  const bg = name === 'You' ? '#2d6a4f' : avatarColor(name);
+function AvatarCircle({ name, isCurrentUser }: { name: string; isCurrentUser?: boolean }) {
   return (
     <div
-      className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-semibold shrink-0 select-none ring-2 ring-white ring-offset-1"
-      style={{ backgroundColor: bg }}
+      className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0 select-none"
+      style={{
+        background: isCurrentUser ? '#1B6B45' : avatarColor(name),
+        color: '#ffffff',
+        outline: '2px solid rgba(27,107,69,0.12)',
+        outlineOffset: '1px',
+      }}
       aria-hidden="true"
     >
       {initials(name)}
@@ -92,98 +86,112 @@ function AvatarCircle({ name }: { name: string }) {
 }
 
 function LeaderboardRow({ user, rank, isLast }: { user: LeaderboardUser; rank: number; isLast: boolean }) {
-  const scoreColor = user.avgScore >= 70 ? 'text-primary' : 'text-negative';
-  const rowBg = user.isCurrentUser ? 'bg-primary-light' : '';
+  const scoreStrong = user.avgScore >= 70;
 
   return (
     <div
-      className={`${rowBg} flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-divider' : ''}`}
+      className="flex items-center gap-3 px-4 py-3"
+      style={{
+        background: user.isCurrentUser ? '#D8EEE5' : 'transparent',
+        ...(isLast ? {} : { borderBottom: '1px solid #ECF3EE' }),
+      }}
     >
-      {/* Rank */}
       <RankNumber rank={rank} />
-
-      {/* Avatar */}
-      <AvatarCircle name={user.name} />
-
-      {/* Name + streak */}
+      <AvatarCircle name={user.name} isCurrentUser={user.isCurrentUser} />
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <span className={`text-sm font-semibold truncate ${user.isCurrentUser ? 'text-primary' : 'text-text'}`}>
+        <span className="text-sm truncate font-semibold text-text">
           {user.name}
         </span>
         {user.streakDays > 0 && (
-          <span className="text-xs text-text-faint">
-            🔥 {user.streakDays}
+          <span className="text-xs text-text-muted">
+            {user.streakDays}-day streak
           </span>
         )}
       </div>
-
-      {/* Score */}
-      <span className={`text-lg font-bold tabular-nums shrink-0 ${scoreColor}`}>
+      <span
+        className="text-lg font-mono-data tabular-nums shrink-0"
+        style={{ color: scoreStrong ? '#1B6B45' : '#5C7268' }}
+      >
         {user.avgScore.toFixed(1)}
       </span>
     </div>
   );
 }
 
-// ── Current-user rank card ─────────────────────────────────────────────────
-
 function MyRankCard({ rank, user }: { rank: number; user: LeaderboardUser }) {
   return (
-    <div className="bg-gradient-to-r from-primary to-primary-mid text-white rounded-card ring-1 ring-white/10 px-5 py-5 flex items-center gap-5">
-      {/* Big rank number */}
+    <div className="rounded-card px-5 py-5 flex items-center gap-4 bg-surface border border-border shadow-card">
       <div className="flex flex-col items-center shrink-0 leading-none">
-        <span className="text-[64px] font-extrabold text-white/80 leading-none tabular-nums">
-          #{rank}
+        <span className="font-display text-4xl text-primary">{`#${rank}`}</span>
+        <span className="text-xs text-text-muted mt-1">Your rank</span>
+      </div>
+
+      <div className="self-stretch w-px bg-divider" />
+
+      <div className="flex flex-col gap-1 flex-1 min-w-0">
+        <span className="truncate font-semibold text-text">{user.name}</span>
+        <span className="text-xs text-text-muted">30-day average</span>
+        <span className="font-mono-data text-lg text-primary">
+          +{user.avgScore.toFixed(1)}
         </span>
       </div>
 
-      {/* Divider */}
-      <div className="w-px self-stretch bg-white/20" />
-
-      {/* Name + score */}
-      <div className="flex flex-col gap-2 flex-1 min-w-0">
-        <span className="font-bold text-white text-base truncate">{user.name}</span>
-        <div className="flex flex-col gap-1">
-          <span className="text-white/60 text-xs">30-day avg</span>
-          <span className="text-white text-2xl font-bold tabular-nums leading-none">
-            +{user.avgScore.toFixed(1)}
-          </span>
-        </div>
-      </div>
-
-      {/* Avatar */}
-      <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-base shrink-0 ring-1 ring-white/30">
-        {initials(user.name)}
-      </div>
+      <AvatarCircle name={user.name} isCurrentUser />
     </div>
   );
 }
-
-// ── Page ───────────────────────────────────────────────────────────────────
 
 type Tab = 'global' | 'nearby';
 
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState<Tab>('global');
-  const [secondsSince, setSecondsSince] = useState(0);
+  const [globalUsers, setGlobalUsers] = useState<LeaderboardUser[]>(DEMO_GLOBAL_USERS);
+  const [nearbyUsers] = useState<LeaderboardUser[]>(DEMO_NEARBY_USERS);
+  const [loading, setLoading] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  // Auto-refresh logic — ticks every 10 s
   useEffect(() => {
-    const interval = setInterval(() => {
-      setSecondsSince((s) => s + 10);
-    }, 10_000);
-    return () => clearInterval(interval);
+    let active = true;
+
+    async function loadLeaderboard() {
+      setLoading(true);
+      setSyncError(null);
+
+      try {
+        const res = await fetch('/api/leaderboard');
+        if (!res.ok) {
+          throw new Error(`Leaderboard fetch failed (${res.status})`);
+        }
+
+        const data = await res.json();
+        if (!active) return;
+
+        if (Array.isArray(data.entries) && data.entries.length > 0) {
+          const mapped = (data.entries as LeaderboardEntry[]).map(toLeaderboardUser);
+          setGlobalUsers(mapped);
+        }
+      } catch (err) {
+        if (active) {
+          const message = err instanceof Error ? err.message : 'Leaderboard sync failed';
+          setSyncError(message);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadLeaderboard();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Reset timer when tab changes (simulates a fresh fetch)
-  function handleTabChange(tab: Tab) {
-    setActiveTab(tab);
-    setSecondsSince(0);
-  }
-
-  const users = activeTab === 'global' ? GLOBAL_USERS : NEARBY_USERS;
-  const currentUser = users.find((u) => u.isCurrentUser)!;
-  const currentRank = users.findIndex((u) => u.isCurrentUser) + 1;
+  const users = activeTab === 'global' ? globalUsers : nearbyUsers;
+  const currentUser = users.find((u) => u.isCurrentUser);
+  const currentRank = currentUser ? users.findIndex((u) => u.isCurrentUser) + 1 : 0;
 
   const tabItems: { key: Tab; label: string }[] = [
     { key: 'global', label: 'Global' },
@@ -194,27 +202,30 @@ export default function LeaderboardPage() {
     <div className="pl-0 lg:pl-16 pb-20 lg:pb-0 min-h-screen bg-bg">
       <Sidebar />
 
-      <main className="max-w-xl mx-auto px-4 pt-0">
-
-        {/* ── Page heading ── */}
-        <div className="pt-6 pb-1">
-          <h1 className="text-[28px] font-bold text-text leading-tight">Leaderboard</h1>
+      <main className="max-w-2xl mx-auto px-4 pt-6 pb-6">
+        <div className="flex flex-col gap-2">
+          <h1 className="font-display text-2xl text-text">Leaderboard</h1>
+          <p className="text-sm text-text-muted">
+            Rankings are based on your rolling 30-day average.
+          </p>
         </div>
 
-        {/* ── Underline tab bar ── */}
-        <div className="mt-4">
+        {(loading || syncError) && (
+          <div className="mt-3 rounded-btn px-4 py-2 text-xs text-text-muted bg-surface border border-border">
+            {loading ? 'Syncing leaderboard...' : `Using demo leaderboard: ${syncError}`}
+          </div>
+        )}
+
+        <div className="mt-5">
           <div className="flex border-b border-divider">
-            {tabItems.map(tab => {
+            {tabItems.map((tab) => {
               const active = activeTab === tab.key;
               return (
                 <button
                   key={tab.key}
-                  onClick={() => handleTabChange(tab.key)}
-                  className={`relative px-4 pb-3 text-sm transition-colors focus-visible:outline-none ${
-                    active
-                      ? 'font-semibold text-text'
-                      : 'font-medium text-text-faint hover:text-text-muted'
-                  }`}
+                  onClick={() => setActiveTab(tab.key)}
+                  className="relative px-4 pb-3 text-sm transition-colors"
+                  style={{ color: active ? '#0F1C14' : '#96AEA7', fontWeight: active ? 600 : 500 }}
                 >
                   {tab.label}
                   {active && (
@@ -226,17 +237,15 @@ export default function LeaderboardPage() {
           </div>
         </div>
 
-        {/* ── My rank card ── */}
         {currentUser && (
           <div className="mt-4 mb-5">
             <MyRankCard rank={currentRank} user={currentUser} />
           </div>
         )}
 
-        {/* ── Rankings list ── */}
         <div className="pb-4">
-          <p className="text-text-muted text-sm font-medium mb-2">Rankings</p>
-          <div className="bg-surface rounded-card shadow-card overflow-hidden">
+          <p className="text-sm font-medium mb-2 text-text-muted">Rankings</p>
+          <div className="rounded-card overflow-hidden bg-surface border border-border shadow-card">
             {users.map((user, index) => (
               <LeaderboardRow
                 key={user.id}

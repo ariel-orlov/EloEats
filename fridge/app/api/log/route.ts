@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { isDemoMode } from '@/lib/demo-mode';
+import { getDemoHistoryEntries } from '@/lib/demo-data';
 import { updateLeaderboard } from '@/lib/scoring';
 import type { ConsumedItem, FoodCategory } from '@/types';
 
@@ -77,6 +79,14 @@ export async function POST(req: NextRequest) {
     items: ConsumedItem[];
   };
 
+  if (isDemoMode) {
+    return NextResponse.json({ ok: true, logged: items.length, demo: true });
+  }
+
+  if (!db) {
+    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+  }
+
   const now = new Date().toISOString();
   const batch = db.batch();
 
@@ -95,6 +105,14 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   const userId = req.nextUrl.searchParams.get('userId');
   if (!userId) return NextResponse.json({ error: 'userId required' }, { status: 400 });
+
+  if (isDemoMode) {
+    return NextResponse.json({ entries: getDemoHistoryEntries(), demo: true });
+  }
+
+  if (!db) {
+    return NextResponse.json({ error: 'Firebase not configured' }, { status: 500 });
+  }
 
   const snap = await db
     .collection('consumed')

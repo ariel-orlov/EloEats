@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BottomNav, Sidebar } from '@/components/Nav';
 import ScoreBadge from '@/components/ScoreBadge';
 import type { FoodCategory } from '@/types';
+import { DEMO_USER, getDemoHistoryItems } from '@/lib/demo-data';
 
 // ─── Category helpers ────────────────────────────────────────────────────────
 
@@ -34,34 +35,18 @@ interface DayGroup {
 
 type Filter = 'today' | 'week' | 'month';
 
-// ─── Mock data ────────────────────────────────────────────────────────────────
+// ─── Demo + API data ────────────────────────────────────────────────────────
 
 const now = new Date();
 
-function daysAgo(d: number, h: number, m: number): Date {
-  const dt = new Date(now);
-  dt.setDate(dt.getDate() - d);
-  dt.setHours(h, m, 0, 0);
-  return dt;
-}
-
-const ALL_ITEMS: HistoryItem[] = [
-  // Today
-  { id: '1',  name: 'Greek Yogurt',        category: 'dairy',              score:  7, consumedAt: daysAgo(0, 8,  15) },
-  { id: '2',  name: 'Banana',              category: 'vegetable_fruit',    score:  6, consumedAt: daysAgo(0, 8,  20) },
-  { id: '3',  name: 'Brown Rice Bowl',     category: 'whole_grain_legume', score:  9, consumedAt: daysAgo(0, 13, 5)  },
-  { id: '4',  name: 'Double Cheeseburger', category: 'fast_food_sugary',   score: -8, consumedAt: daysAgo(0, 19, 44) },
-  // Yesterday
-  { id: '5',  name: 'Chicken Breast',      category: 'lean_protein',       score: 10, consumedAt: daysAgo(1, 12, 30) },
-  { id: '6',  name: 'Spinach Salad',       category: 'vegetable_fruit',    score:  8, consumedAt: daysAgo(1, 13, 0)  },
-  { id: '7',  name: 'Potato Chips',        category: 'processed',          score: -5, consumedAt: daysAgo(1, 16, 20) },
-  { id: '8',  name: 'Oat Milk Latte',      category: 'dairy',              score:  3, consumedAt: daysAgo(1, 8,  0),  redeemed: true },
-  // 2 days ago
-  { id: '9',  name: 'Lentil Soup',         category: 'whole_grain_legume', score: 10, consumedAt: daysAgo(2, 11, 50) },
-  { id: '10', name: 'Blueberries',         category: 'vegetable_fruit',    score:  8, consumedAt: daysAgo(2, 9,  10) },
-  { id: '11', name: 'Instant Noodles',     category: 'processed',          score: -6, consumedAt: daysAgo(2, 20, 5)  },
-  { id: '12', name: 'Salmon Fillet',       category: 'lean_protein',       score: 10, consumedAt: daysAgo(2, 13, 30) },
-];
+type HistoryEntry = {
+  id?: string;
+  name: string;
+  category: FoodCategory;
+  score: number;
+  consumedAt: string;
+  redeemed?: boolean;
+};
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -88,7 +73,7 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
 }
 
-function filterItems(filter: Filter): HistoryItem[] {
+function filterItems(items: HistoryItem[], filter: Filter): HistoryItem[] {
   const start = new Date(now);
   start.setHours(0, 0, 0, 0);
 
@@ -100,7 +85,7 @@ function filterItems(filter: Filter): HistoryItem[] {
     start.setDate(start.getDate() - 29);
   }
 
-  return ALL_ITEMS.filter(item => item.consumedAt >= start);
+  return items.filter(item => item.consumedAt >= start);
 }
 
 function groupByDay(items: HistoryItem[]): DayGroup[] {
@@ -123,12 +108,70 @@ function dayNetScore(items: HistoryItem[]): number {
   return items.reduce((sum, item) => sum + (item.redeemed ? 0 : item.score), 0);
 }
 
+// ─── Dot color helper ─────────────────────────────────────────────────────────
+
+function dotColor(score: number): string {
+  if (score >= 6) return '#16A34A';
+  if (score >= 1) return '#D97706';
+  return '#DC2626';
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HistoryPage() {
   const [filter, setFilter] = useState<Filter>('today');
+  const [items, setItems] = useState<HistoryItem[]>(getDemoHistoryItems());
+  const [loading, setLoading] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  const filtered  = filterItems(filter);
+  useEffect(() => {
+    let active = true;
+
+    async function loadHistory() {
+      setLoading(true);
+      setSyncError(null);
+
+      try {
+        const res = await fetch(`/api/log?userId=${DEMO_USER.id}`);
+        if (!res.ok) {
+          throw new Error(`History fetch failed (${res.status})`);
+        }
+
+        const data = await res.json();
+        if (!active) return;
+
+        if (Array.isArray(data.entries) && data.entries.length > 0) {
+          const mapped = (data.entries as HistoryEntry[]).map((entry) => ({
+            id: entry.id ?? `${entry.name}-${entry.consumedAt}`,
+            name: entry.name,
+            category: entry.category,
+            score: entry.score,
+            consumedAt: new Date(entry.consumedAt),
+            redeemed: entry.redeemed,
+          }));
+
+          setItems(mapped);
+        }
+      } catch (err) {
+        if (active) {
+          const message = err instanceof Error ? err.message : 'History sync failed';
+          setSyncError(message);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadHistory();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const filtered  = filterItems(items, filter);
   const dayGroups = groupByDay(filtered);
 
   const filterLabel: Record<Filter, string> = {
@@ -152,7 +195,7 @@ export default function HistoryPage() {
 
         {/* ── Page heading ── */}
         <div className="pt-6 px-4 lg:px-8 pb-1">
-          <h1 className="text-[28px] font-bold text-text leading-tight">History</h1>
+          <h1 className="font-display text-2xl text-text">History</h1>
         </div>
 
         {/* ── Underline tab bar ── */}
@@ -164,15 +207,13 @@ export default function HistoryPage() {
                 <button
                   key={tab.key}
                   onClick={() => setFilter(tab.key)}
-                  className={`relative px-4 pb-3 text-sm transition-colors focus-visible:outline-none ${
-                    active
-                      ? 'font-semibold text-text'
-                      : 'font-medium text-text-faint hover:text-text-muted'
+                  className={`relative px-4 pb-3 text-sm focus-visible:outline-none transition-colors ${
+                    active ? 'text-text font-semibold' : 'text-text-faint hover:text-text-muted'
                   }`}
                 >
                   {tab.label}
                   {active && (
-                    <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary" />
+                    <span className="absolute bottom-0 left-0 right-0 h-[2.5px] rounded-full bg-primary" />
                   )}
                 </button>
               );
@@ -182,10 +223,15 @@ export default function HistoryPage() {
 
         {/* ── Content area ── */}
         <div className="px-4 lg:px-8 pb-6">
+          {(loading || syncError) && (
+            <div className="mb-4 rounded-btn border border-border bg-surface px-4 py-2 text-xs text-text-muted">
+              {loading ? 'Syncing your latest entries...' : `Using demo history: ${syncError}`}
+            </div>
+          )}
           {dayGroups.length === 0 ? (
             /* Empty state */
             <div className="flex flex-col items-center justify-center mt-20 gap-3 text-center">
-              <div className="w-16 h-16 rounded-full bg-surface flex items-center justify-center shadow-card">
+              <div className="w-16 h-16 rounded-full bg-surface-alt border border-border flex items-center justify-center">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
@@ -199,7 +245,7 @@ export default function HistoryPage() {
                   <path d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <p className="text-text-muted text-sm">
+              <p className="text-sm text-text-muted">
                 No food logged {filterLabel[filter]} yet.
               </p>
             </div>
@@ -208,56 +254,71 @@ export default function HistoryPage() {
               {dayGroups.map(group => (
                 <section key={group.date.toDateString()}>
 
-                  {/* Day header — clean row, no card/shadow */}
-                  <div className="flex items-center justify-between mt-4 mb-1">
-                    <span className="text-sm font-medium text-text-muted">
+                  {/* Day header */}
+                  <div className="flex items-center justify-between mt-4 mb-2">
+                    <span
+                      className="text-sm font-semibold text-text-muted"
+                      style={{ fontFamily: '"Bricolage Grotesque", sans-serif' }}
+                    >
                       {formatDayLabel(group.date)}
                     </span>
                     <ScoreBadge score={dayNetScore(group.items)} size="sm" />
                   </div>
 
-                  {/* Item rows — single card per day, rows divided by border */}
+                  {/* Item rows — single card per day */}
                   <div className="bg-surface rounded-card shadow-card overflow-hidden">
                     {group.items
                       .slice()
                       .sort((a, b) => b.consumedAt.getTime() - a.consumedAt.getTime())
                       .map((item, idx, arr) => {
-                        const meta = CATEGORY_META[item.category];
+                        const meta   = CATEGORY_META[item.category];
                         const isLast = idx === arr.length - 1;
+                        const dc     = dotColor(item.score);
                         return (
                           <div
                             key={item.id}
-                            className={`flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-divider' : ''}`}
+                            className={`flex items-center gap-3 px-4 py-3${isLast ? '' : ' border-b border-divider'}`}
                           >
                             {/* Dot indicator */}
                             <span
-                              className="w-2 h-2 rounded-full shrink-0"
-                              style={{
-                                backgroundColor: item.score >= 6
-                                  ? '#1a6b45'
-                                  : item.score >= 1
-                                  ? '#f59e0b'
-                                  : '#d93025',
-                              }}
+                              className="w-2.5 h-2.5 rounded-full shrink-0"
+                              style={{ backgroundColor: dc }}
                             />
 
                             {/* Name + category */}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-text text-sm truncate">{item.name}</p>
-                              <span className={`inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-full ${meta.color}`}>
+                              <p className="font-medium text-text text-sm truncate">
+                                {item.name}
+                              </p>
+                              <span
+                                className={`inline-block mt-0.5 ${meta.color}`}
+                                style={{
+                                  fontSize: '11px',
+                                  fontWeight: 600,
+                                  paddingInline: '6px',
+                                  paddingBlock: '2px',
+                                  borderRadius: '999px',
+                                }}
+                              >
                                 {meta.label}
                               </span>
                             </div>
 
                             {/* Time */}
-                            <span className="text-xs text-text-faint tabular-nums shrink-0">
+                            <span
+                              className="text-xs text-text-faint font-medium tabular-nums shrink-0"
+                              style={{ fontFamily: '"Fira Code", monospace' }}
+                            >
                               {formatTime(item.consumedAt)}
                             </span>
 
                             {/* Score or redeemed label */}
                             <div className="shrink-0">
                               {item.redeemed ? (
-                                <span className="text-amber-600 text-xs font-medium">
+                                <span
+                                  className="text-xs font-medium"
+                                  style={{ color: '#D97706' }}
+                                >
                                   redeemed
                                 </span>
                               ) : (

@@ -1,7 +1,14 @@
 import { useRef, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Platform, Pressable } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_600SemiBold,
+  Inter_700Bold,
+} from '@expo-google-fonts/inter';
 
 // In the simulator/dev, the Next.js app runs on your Mac's localhost.
 // On a real device over the same Wi-Fi, replace with your Mac's local IP, e.g. http://192.168.1.x:3000
@@ -14,53 +21,82 @@ export default function AppScreen() {
   const webViewRef = useRef<WebView>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [fontsLoaded] = useFonts({
+    Inter_400Regular,
+    Inter_500Medium,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  const showError = error;
+  const showSplash = !error && (!fontsLoaded || loading);
+  const showWebView = fontsLoaded && !loading && !error;
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
-      {/* Green status bar area */}
-      <View style={[styles.statusBar, { height: 0 }]} />
+      <View pointerEvents="none" style={styles.background}>
+        <View style={styles.orbPrimary} />
+        <View style={styles.orbSecondary} />
+        <View style={styles.orbTertiary} />
+      </View>
 
-      {loading && !error && (
-        <View style={styles.splash}>
-          <View style={styles.logoMark}>
-            <Text style={styles.logoText}>FW</Text>
+      {showSplash && (
+        <View style={styles.centerWrap}>
+          <View style={styles.card}>
+            <View style={styles.logoMark}>
+              <Text style={styles.logoText}>FW</Text>
+            </View>
+            <Text style={styles.appName}>FridgeWise</Text>
+            <Text style={styles.tagline}>Eat well. Beat your friends.</Text>
+            <View style={styles.loadingRow}>
+              <ActivityIndicator color={THEME.primary} />
+              <Text style={styles.loadingText}>Connecting to your fridge...</Text>
+            </View>
           </View>
-          <Text style={styles.appName}>FridgeWise</Text>
-          <Text style={styles.tagline}>Eat well. Beat your friends.</Text>
-          <ActivityIndicator color="#d8f3dc" style={styles.spinner} size="large" />
+          <Text style={styles.footerNote}>Verdant UI - Demo mode ready</Text>
         </View>
       )}
 
-      {error && (
-        <View style={styles.splash}>
-          <View style={styles.logoMark}>
-            <Text style={styles.logoText}>FW</Text>
+      {showError && (
+        <View style={styles.centerWrap}>
+          <View style={styles.card}>
+            <View style={[styles.logoMark, styles.logoMarkError]}>
+              <Text style={styles.logoText}>FW</Text>
+            </View>
+            <Text style={styles.appName}>FridgeWise</Text>
+            <Text style={styles.errorTitle}>We could not reach the app.</Text>
+            <Text style={styles.errorText}>
+              Start the Next.js server and try again:
+            </Text>
+            <View style={styles.codeBlock}>
+              <Text style={styles.code}>cd fridge && npm run dev</Text>
+            </View>
+            <Pressable
+              onPress={() => {
+                setError(false);
+                setLoading(true);
+                webViewRef.current?.reload();
+              }}
+              style={({ pressed }) => [
+                styles.retryButton,
+                pressed && styles.retryButtonPressed,
+              ]}
+            >
+              <Text style={styles.retryButtonText}>Retry connection</Text>
+            </Pressable>
           </View>
-          <Text style={styles.appName}>FridgeWise</Text>
-          <Text style={styles.errorText}>
-            Could not connect to the app server.{'\n'}
-            Make sure the Next.js dev server is running:{'\n\n'}
-            <Text style={styles.code}>cd fridge && npm run dev</Text>
-          </Text>
-          <Text
-            style={styles.retry}
-            onPress={() => {
-              setError(false);
-              setLoading(true);
-              webViewRef.current?.reload();
-            }}
-          >
-            Tap to retry
-          </Text>
         </View>
       )}
 
       <WebView
         ref={webViewRef}
         source={{ uri: PROD_URL }}
-        style={[styles.webview, (loading || error) && styles.hidden]}
+        style={[styles.webview, !showWebView && styles.hidden]}
         onLoadEnd={() => setLoading(false)}
-        onError={() => { setLoading(false); setError(true); }}
+        onError={() => {
+          setLoading(false);
+          setError(true);
+        }}
         onHttpError={({ nativeEvent }) => {
           if (nativeEvent.statusCode >= 500) {
             setLoading(false);
@@ -85,20 +121,57 @@ export default function AppScreen() {
   );
 }
 
-const GREEN = '#2d6a4f';
-const GREEN_LIGHT = '#d8f3dc';
+const THEME = {
+  bg: '#f4faf6',
+  surface: '#ffffff',
+  primary: '#2d6a4f',
+  primaryMid: '#52b788',
+  primaryLight: '#d8f3dc',
+  negative: '#e63946',
+  text: '#1b2d22',
+  muted: '#6b7c72',
+  border: '#e4ede8',
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: GREEN,
+    backgroundColor: THEME.bg,
   },
-  statusBar: {
-    backgroundColor: GREEN,
+  background: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+  },
+  orbPrimary: {
+    position: 'absolute',
+    width: 320,
+    height: 320,
+    borderRadius: 200,
+    backgroundColor: THEME.primaryLight,
+    top: -180,
+    right: -140,
+  },
+  orbSecondary: {
+    position: 'absolute',
+    width: 240,
+    height: 240,
+    borderRadius: 160,
+    backgroundColor: 'rgba(82, 183, 136, 0.22)',
+    bottom: -120,
+    left: -80,
+  },
+  orbTertiary: {
+    position: 'absolute',
+    width: 180,
+    height: 180,
+    borderRadius: 120,
+    backgroundColor: 'rgba(45, 106, 79, 0.12)',
+    top: 140,
+    left: 40,
   },
   webview: {
     flex: 1,
-    backgroundColor: '#f4faf6',
+    backgroundColor: THEME.bg,
   },
   hidden: {
     opacity: 0,
@@ -106,65 +179,121 @@ const styles = StyleSheet.create({
     width: 0,
     height: 0,
   },
-  splash: {
+  centerWrap: {
     flex: 1,
-    backgroundColor: GREEN,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 12,
     paddingHorizontal: 40,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: THEME.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: THEME.border,
+    paddingVertical: 28,
+    paddingHorizontal: 24,
+    alignItems: 'center',
+    shadowColor: '#0c1a13',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 8,
   },
   logoMark: {
     width: 72,
     height: 72,
     borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: THEME.primary,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  logoMarkError: {
+    backgroundColor: THEME.primaryMid,
   },
   logoText: {
     color: '#fff',
     fontSize: 28,
-    fontWeight: '800',
+    fontFamily: 'Inter_700Bold',
     letterSpacing: -1,
   },
   appName: {
-    color: '#fff',
-    fontSize: 32,
-    fontWeight: '800',
+    color: THEME.text,
+    fontSize: 28,
+    fontFamily: 'Inter_700Bold',
     letterSpacing: -0.5,
   },
   tagline: {
-    color: GREEN_LIGHT,
-    fontSize: 16,
-    marginBottom: 24,
+    color: THEME.muted,
+    fontSize: 15,
+    fontFamily: 'Inter_400Regular',
+    marginTop: 6,
+    marginBottom: 18,
+    textAlign: 'center',
   },
-  spinner: {
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+  },
+  loadingText: {
+    color: THEME.primary,
+    fontSize: 14,
+    fontFamily: 'Inter_500Medium',
+  },
+  footerNote: {
+    color: THEME.muted,
+    fontSize: 12,
+    fontFamily: 'Inter_500Medium',
     marginTop: 16,
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
+  },
+  errorTitle: {
+    color: THEME.text,
+    fontSize: 18,
+    fontFamily: 'Inter_600SemiBold',
+    marginTop: 8,
   },
   errorText: {
-    color: GREEN_LIGHT,
-    fontSize: 15,
+    color: THEME.muted,
+    fontSize: 14,
+    fontFamily: 'Inter_400Regular',
     textAlign: 'center',
-    lineHeight: 24,
-    marginTop: 8,
+    lineHeight: 21,
+    marginTop: 10,
+  },
+  codeBlock: {
+    marginTop: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 12,
+    backgroundColor: THEME.bg,
+    borderWidth: 1,
+    borderColor: THEME.border,
   },
   code: {
     fontFamily: Platform.OS === 'ios' ? 'Courier New' : 'monospace',
-    color: '#fff',
+    color: THEME.text,
     fontSize: 13,
   },
-  retry: {
-    color: '#fff',
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 24,
+  retryButton: {
+    marginTop: 18,
     paddingVertical: 12,
-    paddingHorizontal: 28,
-    borderRadius: 10,
-    borderWidth: 1.5,
-    borderColor: 'rgba(255,255,255,0.4)',
-    overflow: 'hidden',
+    paddingHorizontal: 26,
+    borderRadius: 12,
+    backgroundColor: THEME.primary,
+  },
+  retryButtonPressed: {
+    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontFamily: 'Inter_600SemiBold',
   },
 });

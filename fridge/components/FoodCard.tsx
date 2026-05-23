@@ -1,13 +1,13 @@
 import ScoreBadge from './ScoreBadge';
 import type { FoodItem } from '@/types';
 
-const CATEGORY_META: Record<FoodItem['category'], { label: string; dot: string }> = {
-  vegetable_fruit:    { label: 'Veg & Fruit',  dot: '#22c55e' },
-  whole_grain_legume: { label: 'Grains',        dot: '#f59e0b' },
-  lean_protein:       { label: 'Protein',       dot: '#3b82f6' },
-  dairy:              { label: 'Dairy',         dot: '#0ea5e9' },
-  processed:          { label: 'Processed',     dot: '#f97316' },
-  fast_food_sugary:   { label: 'Junk',          dot: '#ef4444' },
+const CATEGORY_META: Record<FoodItem['category'], { label: string; emoji: string; color: string; bg: string }> = {
+  vegetable_fruit:    { label: 'Veg & Fruit', emoji: '🥦', color: '#166534', bg: '#DCFCE7' },
+  whole_grain_legume: { label: 'Grains',       emoji: '🌾', color: '#92400E', bg: '#FEF3C7' },
+  lean_protein:       { label: 'Protein',      emoji: '🥩', color: '#9F1239', bg: '#FFE4E6' },
+  dairy:              { label: 'Dairy',        emoji: '🥛', color: '#1E40AF', bg: '#DBEAFE' },
+  processed:          { label: 'Processed',    emoji: '📦', color: '#9A3412', bg: '#FFEDD5' },
+  fast_food_sugary:   { label: 'Junk',         emoji: '🍔', color: '#991B1B', bg: '#FEE2E2' },
 };
 
 interface Props {
@@ -21,17 +21,25 @@ export default function FoodCard({ item, consumed = false, showExplanation = fal
 
   return (
     <div className={`flex items-center gap-3 py-3.5 px-4 transition-opacity ${consumed ? 'opacity-40' : ''}`}>
-      {/* Category dot */}
+      {/* Emoji category chip */}
       <span
-        className="shrink-0 w-2 h-2 rounded-full mt-0.5"
-        style={{ background: meta.dot }}
-      />
+        className="shrink-0 w-9 h-9 rounded-[10px] flex items-center justify-center text-lg leading-none select-none"
+        style={{ background: meta.bg }}
+        aria-hidden="true"
+      >
+        {meta.emoji}
+      </span>
 
       <div className="flex-1 min-w-0">
         <p className={`font-semibold text-[15px] leading-snug ${consumed ? 'line-through text-text-muted' : 'text-text'}`}>
           {item.name}
         </p>
-        <p className="text-xs text-text-faint mt-0.5">{meta.label}</p>
+        <span
+          className="text-[11px] font-semibold px-1.5 py-0.5 rounded-full"
+          style={{ color: meta.color, background: meta.bg }}
+        >
+          {meta.label}
+        </span>
         {showExplanation && (
           <p className="text-xs text-text-muted mt-1 leading-relaxed">{item.explanation}</p>
         )}
