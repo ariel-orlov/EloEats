@@ -8,13 +8,13 @@ import { DEMO_USER, getDemoHistoryItems } from '@/lib/demo-data';
 
 // ─── Category helpers ────────────────────────────────────────────────────────
 
-const CATEGORY_META: Record<FoodCategory, { label: string; color: string }> = {
-  vegetable_fruit:    { label: 'Veg & Fruit', color: 'bg-emerald-100 text-emerald-700' },
-  whole_grain_legume: { label: 'Grains',      color: 'bg-amber-100  text-amber-700'   },
-  lean_protein:       { label: 'Protein',     color: 'bg-blue-100   text-blue-700'    },
-  dairy:              { label: 'Dairy',        color: 'bg-sky-100    text-sky-700'     },
-  processed:          { label: 'Processed',   color: 'bg-orange-100 text-orange-700'  },
-  fast_food_sugary:   { label: 'Junk',        color: 'bg-red-100    text-red-700'     },
+const CATEGORY_META: Record<FoodCategory, { label: string; color: string; emoji: string }> = {
+  vegetable_fruit:    { label: 'Veg & Fruit', color: 'bg-emerald-100 text-emerald-700', emoji: '🥦' },
+  whole_grain_legume: { label: 'Grains',      color: 'bg-amber-100  text-amber-700',   emoji: '🌾' },
+  lean_protein:       { label: 'Protein',     color: 'bg-blue-100   text-blue-700',    emoji: '🥩' },
+  dairy:              { label: 'Dairy',        color: 'bg-sky-100    text-sky-700',     emoji: '🥛' },
+  processed:          { label: 'Processed',   color: 'bg-orange-100 text-orange-700',  emoji: '📦' },
+  fast_food_sugary:   { label: 'Junk',        color: 'bg-red-100    text-red-700',     emoji: '🍔' },
 };
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -273,32 +273,20 @@ export default function HistoryPage() {
                       .map((item, idx, arr) => {
                         const meta   = CATEGORY_META[item.category];
                         const isLast = idx === arr.length - 1;
-                        const dc     = dotColor(item.score);
                         return (
                           <div
                             key={item.id}
                             className={`flex items-center gap-3 px-4 py-3${isLast ? '' : ' border-b border-divider'}`}
                           >
-                            {/* Dot indicator */}
-                            <span
-                              className="w-2.5 h-2.5 rounded-full shrink-0"
-                              style={{ backgroundColor: dc }}
-                            />
+                            {/* Emoji icon */}
+                            <span className="text-lg shrink-0 leading-none">{meta.emoji}</span>
 
                             {/* Name + category */}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-text text-sm truncate">
-                                {item.name}
-                              </p>
+                              <p className="font-medium text-text text-sm truncate">{item.name}</p>
                               <span
                                 className={`inline-block mt-0.5 ${meta.color}`}
-                                style={{
-                                  fontSize: '11px',
-                                  fontWeight: 600,
-                                  paddingInline: '6px',
-                                  paddingBlock: '2px',
-                                  borderRadius: '999px',
-                                }}
+                                style={{ fontSize: '11px', fontWeight: 600, paddingInline: '6px', paddingBlock: '2px', borderRadius: '999px' }}
                               >
                                 {meta.label}
                               </span>
@@ -312,14 +300,11 @@ export default function HistoryPage() {
                               {formatTime(item.consumedAt)}
                             </span>
 
-                            {/* Score or redeemed label */}
+                            {/* Score or offset label */}
                             <div className="shrink-0">
                               {item.redeemed ? (
-                                <span
-                                  className="text-xs font-medium"
-                                  style={{ color: '#D97706' }}
-                                >
-                                  redeemed
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-pill bg-primary-light text-primary">
+                                  ✓ offset
                                 </span>
                               ) : (
                                 <ScoreBadge score={item.score} size="sm" />

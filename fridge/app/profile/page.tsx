@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 import StatCard from '@/components/StatCard';
 import { BottomNav, Sidebar } from '@/components/Nav';
-import { DEMO_BADGES, DEMO_PROFILE_STATS, DEMO_SETTINGS_ROWS, DEMO_USER } from '@/lib/demo-data';
+import { DEMO_BADGES, DEMO_CREDIT_STATE, DEMO_PROFILE_STATS, DEMO_SETTINGS_ROWS, DEMO_USER } from '@/lib/demo-data';
 
 function ChevronRight() {
   return (
@@ -30,12 +30,18 @@ export default function ProfilePage() {
 
       <main className="max-w-2xl mx-auto px-4 pt-6 pb-8 flex flex-col gap-6">
         <header className="rounded-card bg-surface border border-border shadow-card p-6 flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-lg font-semibold">
+          <div className="w-16 h-16 rounded-full bg-primary text-white flex items-center justify-center text-lg font-semibold shrink-0">
             {DEMO_USER.initials}
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex-1 flex flex-col gap-1 min-w-0">
             <p className="font-display text-xl text-text">{DEMO_USER.displayName}</p>
             <p className="text-sm text-text-muted">Member since {DEMO_USER.memberSince}</p>
+          </div>
+          <div className="shrink-0 flex flex-col items-end gap-1">
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+              {DEMO_CREDIT_STATE.tier.charAt(0).toUpperCase() + DEMO_CREDIT_STATE.tier.slice(1)}
+            </span>
+            <span className="text-xs text-text-faint font-medium">{DEMO_CREDIT_STATE.totalCredits} credits</span>
           </div>
         </header>
 
