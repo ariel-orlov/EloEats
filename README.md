@@ -1,4 +1,4 @@
-# FridgeWise 🥦
+# FridgeWise
 
 **Gamified healthy eating powered by AI fridge scanning.**
 
@@ -8,16 +8,16 @@ FridgeWise lets you scan your fridge, get instant health scores for every food i
 
 ## Core Features
 
-### 📸 AI Fridge Scan
+### AI Fridge Scan
 Take a photo of your fridge (or any meal). The AI identifies every food item visible and assigns each one a health score — positive for nutritious foods, negative for junk — with a brief explanation of why.
 
-### 📊 Health Score System
+### Health Score System
 Each food you log adjusts your personal health score. Eating a salad? Points up. Finishing that bag of chips? Points down. Your score reflects your real eating habits over time, not just intent.
 
-### 🏆 Leaderboard
+### Leaderboard
 Compete with friends or the global community. The leaderboard ranks users by their rolling health score, creating social accountability and motivation to keep eating well.
 
-### 📅 Food Log
+### Food Log
 A daily log of everything you've eaten, each entry tagged with its health impact. See patterns, streaks, and progress over time.
 
 ---
