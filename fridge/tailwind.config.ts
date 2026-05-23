@@ -8,32 +8,47 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bg: '#f4faf6',
+        bg: '#f7f8f7',          // almost white, barely any tint — not obviously green
         surface: '#ffffff',
         primary: {
-          DEFAULT: '#2d6a4f',
-          mid: '#52b788',
-          light: '#d8f3dc',
-          hover: '#245a41',
+          DEFAULT: '#1a6b45',   // deeper, richer forest green
+          mid: '#4aab73',
+          light: '#e8f5ee',     // cooler, less saturated mint
+          hover: '#14573a',
+          950: '#0b2e1e',       // for heavy display text on green bg
         },
-        negative: '#e63946',
+        negative: '#d93025',    // less orange, more true red
+        positive: '#1a6b45',
         text: {
-          DEFAULT: '#1b2d22',
-          muted: '#6b7c72',
+          DEFAULT: '#111b14',   // near-black with very slight green undertone
+          muted: '#6a7870',     // warm grey-green
+          faint: '#9eada8',     // for timestamps, tertiary info
         },
-        border: '#e4ede8',
+        border: '#e8ece9',      // neutral, barely visible
+        divider: '#eef1ef',     // hairline
       },
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        '2xs': ['11px', { lineHeight: '16px', letterSpacing: '0.02em' }],
       },
       borderRadius: {
-        card: '16px',
+        card: '14px',
         btn: '10px',
-        pill: '24px',
+        pill: '999px',
+        icon: '10px',
       },
       boxShadow: {
-        card: '0 1px 4px rgba(27,45,34,0.07)',
-        'card-hover': '0 4px 16px rgba(27,45,34,0.12)',
+        // Neutral, not greenish
+        card: '0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)',
+        'card-md': '0 4px 12px rgba(0,0,0,0.08)',
+        'card-lg': '0 8px 32px rgba(0,0,0,0.10)',
+        inner: 'inset 0 1px 3px rgba(0,0,0,0.06)',
+      },
+      letterSpacing: {
+        tight: '-0.02em',
+        snug: '-0.01em',
       },
     },
   },

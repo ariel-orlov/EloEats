@@ -6,26 +6,26 @@ import { BottomNav, Sidebar } from '@/components/Nav';
 // ── Mock data ─────────────────────────────────────────────────────────────────
 
 const CREDITS = 47;
-const NEXT_TIER = 50;
+const NEXT_TIER = 60;
 
 const REWARDS = [
   {
     id: '5pt',
-    name: '5-Point Cheat Pass',
+    name: '5-point cheat pass',
     description: 'Your next 5 points of junk food won\'t affect your score.',
     cost: 30,
     points: 5,
   },
   {
     id: '10pt',
-    name: '10-Point Cheat Pass',
+    name: '10-point cheat pass',
     description: 'Your next 10 points of junk food won\'t affect your score.',
     cost: 60,
     points: 10,
   },
   {
     id: 'free-day',
-    name: 'Free Day Pass',
+    name: 'Free day pass',
     description: 'Eat anything today — nothing counts toward your score.',
     cost: 100,
     points: null,
@@ -38,8 +38,8 @@ const ACTIVE_PASS = {
 };
 
 const HISTORY = [
-  { id: 'h1', date: 'May 18, 2026', reward: '5-Point Cheat Pass', cost: 30 },
-  { id: 'h2', date: 'May 10, 2026', reward: '10-Point Cheat Pass', cost: 60 },
+  { id: 'h1', date: 'May 18, 2026', reward: '5-point cheat pass', cost: 30 },
+  { id: 'h2', date: 'May 10, 2026', reward: '10-point cheat pass', cost: 60 },
 ];
 
 // ── Icons ─────────────────────────────────────────────────────────────────────
@@ -62,19 +62,6 @@ function LockIcon() {
   );
 }
 
-function FireIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="currentColor"
-      className="w-6 h-6 text-orange-300"
-      aria-hidden="true"
-    >
-      <path d="M12.017 2c0 0-4.484 4.57-4.484 8.297 0 1.46.474 2.814 1.285 3.91C8.028 13.13 7.5 11.84 7.5 10.5c0 0-2.5 2.333-2.5 5a7 7 0 0014 0c0-5.5-7-13.5-7-13.5z" />
-    </svg>
-  );
-}
-
 function CheckIcon() {
   return (
     <svg
@@ -84,7 +71,7 @@ function CheckIcon() {
       strokeWidth={2.5}
       strokeLinecap="round"
       strokeLinejoin="round"
-      className="w-5 h-5"
+      className="w-4 h-4"
       aria-hidden="true"
     >
       <path d="M20 6L9 17l-5-5" />
@@ -92,28 +79,7 @@ function CheckIcon() {
   );
 }
 
-function GiftIcon() {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.8}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-4 h-4"
-      aria-hidden="true"
-    >
-      <path d="M20 12v10H4V12" />
-      <path d="M22 7H2v5h20V7z" />
-      <path d="M12 22V7" />
-      <path d="M12 7H7.5a2.5 2.5 0 010-5C11 2 12 7 12 7z" />
-      <path d="M12 7h4.5a2.5 2.5 0 000-5C13 2 12 7 12 7z" />
-    </svg>
-  );
-}
-
-// ── Confirmation overlay ───────────────────────────────────────────────────────
+// ── Confirmation modal ────────────────────────────────────────────────────────
 
 function ConfirmModal({
   reward,
@@ -128,8 +94,8 @@ function ConfirmModal({
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-      <div className="bg-surface rounded-card shadow-card-hover w-full max-w-sm p-6 flex flex-col gap-5">
-        <div className="flex flex-col gap-1">
+      <div className="bg-surface rounded-2xl shadow-card-md w-full max-w-sm p-6 flex flex-col gap-5">
+        <div className="flex flex-col gap-1.5">
           <h2 className="text-text font-bold text-lg">Redeem reward?</h2>
           <p className="text-text-muted text-sm leading-relaxed">
             You're about to redeem{' '}
@@ -138,8 +104,8 @@ function ConfirmModal({
           </p>
         </div>
 
-        <div className="bg-bg rounded-btn p-4 flex items-center justify-between">
-          <span className="text-text-muted text-sm">Your balance after</span>
+        <div className="bg-[#f7f8f7] rounded-btn p-4 flex items-center justify-between">
+          <span className="text-text-muted text-sm">Balance after</span>
           <span className="font-bold text-text text-base">
             {credits - reward.cost} credits
           </span>
@@ -148,13 +114,13 @@ function ConfirmModal({
         <div className="flex gap-3">
           <button
             onClick={onCancel}
-            className="flex-1 rounded-btn border border-border px-4 py-2.5 text-sm font-semibold text-text-muted hover:bg-bg transition-colors"
+            className="flex-1 rounded-btn bg-[#f7f8f7] px-4 py-2.5 text-sm font-semibold text-text-muted hover:bg-[#eef1ef] transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
-            className="flex-1 rounded-btn bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover active:bg-primary-hover transition-colors"
+            className="flex-1 rounded-btn bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:opacity-90 active:opacity-90 transition-opacity"
           >
             Confirm
           </button>
@@ -170,9 +136,10 @@ export default function RewardsPage() {
   const [credits, setCredits] = useState(CREDITS);
   const [confirmTarget, setConfirmTarget] = useState<(typeof REWARDS)[0] | null>(null);
   const [redeemedIds, setRedeemedIds] = useState<string[]>([]);
-  const [activePass, setActivePass] = useState(ACTIVE_PASS);
+  const [activePass] = useState(ACTIVE_PASS);
 
   const progressPct = Math.min((credits / NEXT_TIER) * 100, 100);
+  const remaining = Math.max(0, NEXT_TIER - credits);
 
   function handleRedeemClick(reward: (typeof REWARDS)[0]) {
     if (credits < reward.cost) return;
@@ -195,149 +162,101 @@ export default function RewardsPage() {
       <Sidebar />
       <BottomNav />
 
-      <main className="pl-0 lg:pl-16 pb-20 lg:pb-0 min-h-screen bg-bg">
+      <main className="pl-0 lg:pl-16 pb-20 lg:pb-0 min-h-screen bg-[#f7f8f7]">
         {/* Sticky header */}
-        <header className="sticky top-0 z-40 bg-bg/95 backdrop-blur-sm border-b border-border px-4 lg:px-8 py-4 flex items-center">
-          <h1 className="text-text font-bold text-xl tracking-tight">Rewards</h1>
+        <header className="sticky top-0 z-40 bg-[#f7f8f7]/95 backdrop-blur-sm border-b border-[#e8ece9] px-4 lg:px-8 py-4 flex items-center">
+          <h1 className="text-[#111b14] font-bold text-xl tracking-tight">Rewards</h1>
         </header>
 
-        <div className="px-4 lg:px-8 py-6 flex flex-col gap-8 max-w-2xl">
+        <div className="px-4 lg:px-8 py-6 flex flex-col gap-6 max-w-2xl">
 
           {/* ── 1. Balance card ── */}
-          <div className="bg-primary text-white rounded-card p-6 flex flex-col gap-4">
-            <div className="flex items-start justify-between">
-              <div className="flex flex-col gap-1">
-                <span className="text-white/70 text-xs font-semibold uppercase tracking-widest">
-                  Health Credits
-                </span>
-                <span className="text-5xl font-extrabold leading-none">{credits}</span>
-                <span className="text-white/70 text-sm font-medium mt-1">
-                  credits earned this month
-                </span>
-              </div>
-
-              {/* Circular badge */}
-              <div className="w-14 h-14 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth={1.8}
-                  className="w-7 h-7 text-white"
-                  aria-hidden="true"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M7.73 9.728a6.726 6.726 0 002.748 1.35m8.272-6.842V4.5c0 2.108-.966 3.99-2.48 5.228m2.48-5.492a46.32 46.32 0 012.916.52 6.003 6.003 0 01-5.395 4.972m0 0a6.726 6.726 0 01-2.749 1.35m0 0a6.772 6.772 0 01-3.044 0" />
-                </svg>
-              </div>
+          <div className="bg-gradient-to-br from-[#1a6b45] to-[#2d9b6a] rounded-[14px] p-6 flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <span
+                className="text-[56px] font-extrabold text-white leading-none"
+                aria-label={`${credits} health credits`}
+              >
+                {credits}
+              </span>
+              <span className="text-[#e8f5ee] text-sm">health credits</span>
             </div>
 
-            {/* Progress bar toward next tier */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between text-xs text-white/70 font-medium">
-                <span>Progress to next reward</span>
-                <span>{credits} / {NEXT_TIER}</span>
-              </div>
-              <div className="h-2.5 rounded-pill bg-primary-mid/50 overflow-hidden">
+            <div className="flex flex-col gap-1.5">
+              <div className="h-1.5 rounded-full bg-white/20 overflow-hidden">
                 <div
-                  className="h-full rounded-pill bg-white transition-all duration-500"
+                  className="h-full rounded-full bg-white transition-all duration-500"
                   style={{ width: `${progressPct}%` }}
                 />
               </div>
-              <p className="text-white/60 text-xs">
-                {Math.max(0, NEXT_TIER - credits)} more credits to unlock the next tier
-              </p>
+              <span className="text-[#e8f5ee] text-xs">
+                {remaining} until your next reward
+              </span>
             </div>
           </div>
 
           {/* ── 2. Active pass banner ── */}
           {activePass && (
-            <section className="flex flex-col gap-3">
-              <h2 className="text-text font-bold text-base">Active Passes</h2>
-              <div className="rounded-card p-5 flex items-center gap-4 bg-gradient-to-r from-primary to-primary-mid text-white shadow-card">
-                <div className="w-11 h-11 rounded-btn bg-white/20 flex items-center justify-center shrink-0">
-                  <FireIcon />
-                </div>
-                <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                  <span className="font-bold text-base leading-tight">Cheat Pass Active</span>
-                  <span className="text-white/80 text-sm">
-                    {activePass.pointsRemaining} point{activePass.pointsRemaining !== 1 ? 's' : ''} remaining
-                  </span>
-                  <span className="text-white/60 text-xs mt-0.5">Expires tonight at midnight</span>
-                </div>
-                <div className="shrink-0 flex flex-col items-end">
-                  <span className="text-3xl font-extrabold leading-none">{activePass.pointsRemaining}</span>
-                  <span className="text-white/60 text-[10px] uppercase tracking-wide">pts left</span>
-                </div>
+            <div className="bg-[#fff9ed] border border-[#f59e0b]/30 rounded-[14px] px-4 py-3.5 flex items-center gap-3">
+              <span className="text-[28px] leading-none shrink-0" aria-hidden="true">🔥</span>
+              <div className="flex flex-col gap-0.5 flex-1 min-w-0">
+                <span className="text-[#111b14] font-semibold text-sm leading-snug">
+                  Cheat pass active
+                </span>
+                <span className="text-[#6a7870] text-sm">
+                  {activePass.pointsRemaining} pts left · expires tonight
+                </span>
               </div>
-            </section>
+            </div>
           )}
 
           {/* ── 3. Available rewards ── */}
-          <section className="flex flex-col gap-3">
-            <h2 className="text-text font-bold text-base">Available Rewards</h2>
-            <div className="flex flex-col gap-3">
-              {REWARDS.map((reward) => {
+          <section className="flex flex-col gap-2">
+            <span className="text-[#6a7870] text-sm font-medium px-0.5">Available rewards</span>
+            <div className="bg-white rounded-[14px] shadow-card overflow-hidden">
+              {REWARDS.map((reward, i) => {
                 const canAfford = credits >= reward.cost;
                 const alreadyRedeemed = redeemedIds.includes(reward.id);
+                const isLast = i === REWARDS.length - 1;
 
                 return (
                   <div
                     key={reward.id}
-                    className="bg-surface rounded-card border border-border shadow-card p-4 flex items-start gap-4"
+                    className={`flex items-center gap-4 px-4 py-4 ${!isLast ? 'border-b border-[#eef1ef]' : ''}`}
                   >
-                    {/* Left: icon */}
-                    <div
-                      className={`w-10 h-10 rounded-btn flex items-center justify-center shrink-0 mt-0.5 ${
-                        canAfford ? 'bg-primary-light text-primary' : 'bg-border text-text-muted'
-                      }`}
-                    >
-                      <GiftIcon />
-                    </div>
-
-                    {/* Center: text */}
-                    <div className="flex-1 min-w-0 flex flex-col gap-1">
-                      <span className="text-text font-semibold text-sm leading-snug">
+                    {/* Text block */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                      <span className="text-[#111b14] font-semibold text-sm leading-snug">
                         {reward.name}
                       </span>
-                      <span className="text-text-muted text-xs leading-relaxed">
+                      <span className="text-[#9eada8] text-xs leading-relaxed">
                         {reward.description}
-                      </span>
-                      <span className="text-text-muted text-xs mt-0.5">
-                        Costs {reward.cost} health credits
                       </span>
                     </div>
 
-                    {/* Right: button */}
-                    <div className="shrink-0 flex flex-col items-end gap-2 mt-0.5">
+                    {/* Right side */}
+                    <div className="shrink-0 flex flex-col items-end gap-1.5">
+                      <span className="text-[#6a7870] text-sm">{reward.cost} credits</span>
                       {alreadyRedeemed ? (
-                        <span className="inline-flex items-center gap-1 rounded-pill bg-primary-light text-primary px-3 py-1.5 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1 rounded-[10px] bg-[#e8f5ee] text-[#1a6b45] px-3 py-1.5 text-xs font-semibold">
                           <CheckIcon />
                           Redeemed
                         </span>
-                      ) : (
+                      ) : canAfford ? (
                         <button
                           onClick={() => handleRedeemClick(reward)}
-                          disabled={!canAfford}
-                          className={`rounded-btn px-4 py-2 text-sm font-semibold transition-colors ${
-                            canAfford
-                              ? 'bg-primary text-white hover:bg-primary-hover active:bg-primary-hover'
-                              : 'bg-border text-text-muted cursor-not-allowed'
-                          }`}
-                          aria-label={
-                            canAfford
-                              ? `Redeem ${reward.name} for ${reward.cost} credits`
-                              : `Not enough credits to redeem ${reward.name}`
-                          }
+                          className="bg-[#e8f5ee] text-[#1a6b45] text-xs font-semibold px-3 py-1.5 rounded-[10px] hover:bg-[#d4eddf] transition-colors"
+                          aria-label={`Redeem ${reward.name} for ${reward.cost} credits`}
                         >
-                          {canAfford ? (
-                            'Redeem'
-                          ) : (
-                            <span className="flex items-center gap-1.5">
-                              <LockIcon />
-                              Locked
-                            </span>
-                          )}
+                          Redeem
                         </button>
+                      ) : (
+                        <span
+                          className="text-[#9eada8] inline-flex items-center"
+                          aria-label={`Not enough credits for ${reward.name}`}
+                        >
+                          <LockIcon />
+                        </span>
                       )}
                     </div>
                   </div>
@@ -346,26 +265,25 @@ export default function RewardsPage() {
             </div>
           </section>
 
-          {/* ── 4. Redemption history ── */}
-          <section className="flex flex-col gap-3">
-            <h2 className="text-text font-bold text-base">Redemption History</h2>
-            <div className="bg-surface rounded-card border border-border shadow-card divide-y divide-border overflow-hidden">
-              {HISTORY.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 px-4 py-3.5">
-                  <div className="w-8 h-8 rounded-btn bg-primary-light flex items-center justify-center shrink-0">
-                    <GiftIcon />
+          {/* ── 4. Past redemptions ── */}
+          <section className="flex flex-col gap-2">
+            <span className="text-[#6a7870] text-sm font-medium px-0.5">Past redemptions</span>
+            <div className="bg-white rounded-[14px] shadow-card overflow-hidden">
+              {HISTORY.map((item, i) => {
+                const isLast = i === HISTORY.length - 1;
+                return (
+                  <div
+                    key={item.id}
+                    className={`flex items-center justify-between px-4 py-4 ${!isLast ? 'border-b border-[#eef1ef]' : ''}`}
+                  >
+                    <span className="text-[#111b14] font-semibold text-sm">{item.reward}</span>
+                    <div className="flex flex-col items-end gap-0.5 shrink-0 ml-4">
+                      <span className="text-[#9eada8] text-xs">{item.date}</span>
+                      <span className="text-[#9eada8] text-xs">−{item.cost} credits</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                    <span className="text-text font-semibold text-sm leading-tight">
-                      {item.reward}
-                    </span>
-                    <span className="text-text-muted text-xs">{item.date}</span>
-                  </div>
-                  <span className="text-text-muted text-xs font-medium shrink-0">
-                    -{item.cost} credits
-                  </span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
 

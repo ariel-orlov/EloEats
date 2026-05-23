@@ -6,11 +6,21 @@ interface Props {
 }
 
 export default function StatCard({ label, value, sub, accent = false }: Props) {
+  if (accent) {
+    return (
+      <div className="rounded-card bg-primary p-5 flex flex-col gap-1.5">
+        <span className="text-primary-light text-xs font-medium">{label}</span>
+        <span className="text-white text-3xl font-extrabold tracking-tight tabular-nums">{value}</span>
+        {sub && <span className="text-primary-light text-xs">{sub}</span>}
+      </div>
+    );
+  }
+
   return (
-    <div className={`rounded-card p-4 flex flex-col gap-1 ${accent ? 'bg-primary text-white' : 'bg-surface border border-border shadow-card'}`}>
-      <span className={`text-xs font-medium uppercase tracking-wide ${accent ? 'text-primary-light' : 'text-text-muted'}`}>{label}</span>
-      <span className={`text-2xl font-extrabold tabular-nums ${accent ? 'text-white' : 'text-text'}`}>{value}</span>
-      {sub && <span className={`text-xs ${accent ? 'text-primary-light' : 'text-text-muted'}`}>{sub}</span>}
+    <div className="rounded-card bg-surface border border-border p-5 flex flex-col gap-1.5">
+      <span className="text-text-faint text-xs font-medium">{label}</span>
+      <span className="text-text text-3xl font-extrabold tracking-tight tabular-nums">{value}</span>
+      {sub && <span className="text-text-muted text-xs">{sub}</span>}
     </div>
   );
 }

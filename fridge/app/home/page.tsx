@@ -13,43 +13,78 @@ import type { FoodItem } from '@/types';
 type CamMode = 'inventory' | 'diff';
 
 // ────────────────────────────────────────────────────────────────────────────
+// Score ring SVG
+// ────────────────────────────────────────────────────────────────────────────
+
+function ScoreRing({ score }: { score: number }) {
+  const radius = 20;
+  const circumference = 2 * Math.PI * radius;
+  // Clamp fill between 0–100% of the ring
+  const fillRatio = Math.min(Math.abs(score) / 100, 1);
+  const dashOffset = circumference * (1 - fillRatio);
+  const positive = score >= 0;
+  const strokeColor = positive ? '#1a6b45' : '#d93025';
+
+  return (
+    <svg
+      width="56"
+      height="56"
+      viewBox="0 0 56 56"
+      className="shrink-0"
+      aria-hidden="true"
+    >
+      {/* Track */}
+      <circle
+        cx="28"
+        cy="28"
+        r={radius}
+        fill="none"
+        stroke="#eef1ef"
+        strokeWidth="5"
+      />
+      {/* Fill */}
+      <circle
+        cx="28"
+        cy="28"
+        r={radius}
+        fill="none"
+        stroke={strokeColor}
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={dashOffset}
+        transform="rotate(-90 28 28)"
+        style={{ transition: 'stroke-dashoffset 0.6s ease' }}
+      />
+    </svg>
+  );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
 // Score Header Card
 // ────────────────────────────────────────────────────────────────────────────
 
 function ScoreHeader({ score }: { score: number }) {
   const positive = score >= 0;
   return (
-    <div
-      className={`rounded-card p-5 flex items-center justify-between shadow-card ${
-        positive
-          ? 'bg-primary text-white'
-          : 'bg-red-50 border border-negative/30 text-text'
-      }`}
-    >
+    <div className="bg-surface rounded-card shadow-card px-5 py-5 flex items-center justify-between">
       <div>
-        <p className={`text-sm font-medium ${positive ? 'text-white/70' : 'text-text-muted'}`}>
-          Today&apos;s Score
+        <p className="text-text-faint text-xs font-medium" style={{ letterSpacing: '0' }}>
+          Today&apos;s score
         </p>
         <p
-          className={`text-5xl font-extrabold tabular-nums mt-0.5 ${
-            positive ? 'text-white' : 'text-negative'
-          }`}
+          className="font-extrabold tabular-nums leading-none mt-1"
+          style={{
+            fontSize: '48px',
+            letterSpacing: '-0.03em',
+            color: positive ? '#111b14' : '#d93025',
+          }}
         >
           {positive ? '+' : ''}{score}
         </p>
       </div>
 
-      {/* Decorative fridge silhouette */}
-      <svg
-        viewBox="0 0 48 64"
-        className={`w-12 h-16 opacity-20 ${positive ? 'fill-white' : 'fill-negative'}`}
-        aria-hidden="true"
-      >
-        <rect x="4" y="2" width="40" height="24" rx="4" />
-        <rect x="4" y="30" width="40" height="32" rx="4" />
-        <rect x="8" y="10" width="4" height="8" rx="2" />
-        <rect x="8" y="42" width="4" height="12" rx="2" />
-      </svg>
+      <ScoreRing score={score} />
     </div>
   );
 }
@@ -61,8 +96,7 @@ function ScoreHeader({ score }: { score: number }) {
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="bg-surface border border-border rounded-card shadow-card p-8 max-w-xs w-full flex flex-col items-center gap-4">
-        {/* Simple fridge SVG outline */}
+      <div className="bg-surface rounded-card shadow-card p-8 max-w-xs w-full flex flex-col items-center gap-4">
         <svg
           viewBox="0 0 64 88"
           className="w-20 h-28 text-primary-mid"
@@ -73,13 +107,9 @@ function EmptyState() {
           strokeLinejoin="round"
           aria-hidden="true"
         >
-          {/* Outer body */}
           <rect x="8" y="2" width="48" height="84" rx="6" />
-          {/* Divider between freezer and fridge */}
           <line x1="8" y1="30" x2="56" y2="30" />
-          {/* Freezer handle */}
           <line x1="20" y1="16" x2="20" y2="24" strokeWidth="3" />
-          {/* Fridge handle */}
           <line x1="20" y1="46" x2="20" y2="70" strokeWidth="3" />
         </svg>
 
@@ -128,7 +158,6 @@ export default function HomePage() {
   const [showCam, setShowCam] = useState(false);
   const [camMode, setCamMode] = useState<CamMode>('inventory');
 
-  // Derived: total score = sum of all inventory items
   const totalScore = inventory.reduce((acc, item) => acc + item.score, 0);
   const hasInventory = inventory.length > 0;
 
@@ -150,7 +179,6 @@ export default function HomePage() {
       setStatus(camMode === 'inventory' ? 'Identifying fridge contents…' : 'Detecting what was consumed…');
 
       try {
-        // 1. Call /api/scan
         const scanRes = await fetch('/api/scan', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -168,19 +196,16 @@ export default function HomePage() {
           setInventory(scanData.items ?? []);
           setStatus(`Found ${(scanData.items ?? []).length} item(s) in your fridge.`);
         } else {
-          // diff mode
           const consumedItems: FoodItem[] = scanData.consumed ?? [];
           setConsumed(consumedItems);
 
           if (consumedItems.length > 0) {
-            // Remove consumed items from inventory display
             setInventory(prev =>
               prev.filter(inv => !consumedItems.some(c => c.name === inv.name))
             );
 
             setStatus(`Logging ${consumedItems.length} consumed item(s)…`);
 
-            // 2. Call /api/log
             const logRes = await fetch('/api/log', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -217,11 +242,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-bg">
-      {/* App shell nav */}
       <Sidebar />
       <BottomNav />
 
-      {/* Main content area — offset for sidebar (lg) and bottom nav (mobile) */}
       <div className="pl-0 lg:pl-16 pb-20 lg:pb-0">
 
         {/* Sticky mobile top header */}
@@ -229,7 +252,7 @@ export default function HomePage() {
           <h1 className="text-lg font-bold text-text tracking-tight">FridgeWise</h1>
         </header>
 
-        <main className="max-w-3xl mx-auto px-4 pt-6 pb-8 space-y-6">
+        <main className="max-w-3xl mx-auto px-4 pt-6 pb-8 space-y-5">
 
           {/* 1. Score header */}
           <ScoreHeader score={totalScore} />
@@ -239,7 +262,8 @@ export default function HomePage() {
             <button
               onClick={() => openCam('inventory')}
               disabled={scanning}
-              className="flex-1 bg-primary text-white font-semibold py-3 px-4 rounded-btn shadow-card hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-primary text-white font-semibold text-sm rounded-btn shadow-card hover:bg-primary-hover active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              style={{ height: '48px' }}
             >
               Scan Inventory
             </button>
@@ -247,7 +271,8 @@ export default function HomePage() {
             <button
               onClick={() => openCam('diff')}
               disabled={scanning || !hasInventory}
-              className="flex-1 border-2 border-primary text-primary font-semibold py-3 px-4 rounded-btn hover:bg-primary-light active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 bg-surface text-text font-semibold text-sm rounded-btn border border-border hover:bg-[#f4f6f4] active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              style={{ height: '48px' }}
             >
               Log Consumed
             </button>
@@ -279,36 +304,49 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* 5. Inventory grid or empty state */}
+          {/* 5. Inventory list or empty state */}
           {!hasInventory && consumed.length === 0 ? (
             <EmptyState />
           ) : (
-            <section>
-              {hasInventory && (
-                <>
-                  <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
-                    In Your Fridge
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {inventory.map((item, i) => (
-                      <FoodCard key={`${item.name}-${i}`} item={item} consumed={false} />
-                    ))}
-                  </div>
-                </>
-              )}
+            <section className="space-y-5">
 
-              {consumed.length > 0 && (
-                <div className="mt-5">
-                  <h2 className="text-sm font-semibold text-text-muted uppercase tracking-wider mb-3">
-                    Just Consumed
-                  </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {consumed.map((item, i) => (
-                      <FoodCard key={`consumed-${item.name}-${i}`} item={item} consumed={true} />
+              {hasInventory && (
+                <div>
+                  <p className="text-text-muted font-medium mb-2" style={{ fontSize: '13px' }}>
+                    In your fridge
+                  </p>
+                  {/* Unified list card — one container, rows separated by hairlines */}
+                  <div className="bg-surface rounded-card shadow-card overflow-hidden">
+                    {inventory.map((item, i) => (
+                      <div
+                        key={`${item.name}-${i}`}
+                        className={i < inventory.length - 1 ? 'border-b border-divider' : ''}
+                      >
+                        <FoodCard item={item} consumed={false} />
+                      </div>
                     ))}
                   </div>
                 </div>
               )}
+
+              {consumed.length > 0 && (
+                <div>
+                  <p className="text-text-muted font-medium mb-2" style={{ fontSize: '13px' }}>
+                    Just consumed
+                  </p>
+                  <div className="bg-surface rounded-card shadow-card overflow-hidden">
+                    {consumed.map((item, i) => (
+                      <div
+                        key={`consumed-${item.name}-${i}`}
+                        className={i < consumed.length - 1 ? 'border-b border-divider' : ''}
+                      >
+                        <FoodCard item={item} consumed={true} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
             </section>
           )}
 

@@ -126,8 +126,7 @@ function dayNetScore(items: HistoryItem[]): number {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function HistoryPage() {
-  const [filter, setFilter]       = useState<Filter>('today');
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [filter, setFilter] = useState<Filter>('today');
 
   const filtered  = filterItems(filter);
   const dayGroups = groupByDay(filtered);
@@ -151,50 +150,33 @@ export default function HistoryPage() {
       {/* ── Main content ── */}
       <main className="pl-0 lg:pl-16 pb-20 lg:pb-0">
 
-        {/* Sticky top header (mobile) */}
-        <div className="sticky top-0 z-40 bg-bg border-b border-border px-4 pt-4 pb-3 flex items-center justify-between lg:static lg:border-b-0 lg:pt-8 lg:pb-0 lg:px-8">
-          <h1 className="text-xl font-extrabold text-text">History</h1>
-
-          {/* Refresh button */}
-          <button
-            onClick={() => setRefreshKey(k => k + 1)}
-            aria-label="Refresh"
-            className="p-2 rounded-btn text-text-muted hover:text-primary hover:bg-primary-light transition-colors"
-          >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1.8}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="w-5 h-5"
-              style={{ transform: `rotate(${refreshKey * 360}deg)`, transition: 'transform 0.4s ease' }}
-            >
-              <path d="M1 4v6h6" />
-              <path d="M23 20v-6h-6" />
-              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15" />
-            </svg>
-          </button>
+        {/* ── Page heading ── */}
+        <div className="pt-6 px-4 lg:px-8 pb-1">
+          <h1 className="text-[28px] font-bold text-text leading-tight">History</h1>
         </div>
 
-        {/* ── Filter tabs ── */}
-        <div className="px-4 pt-4 pb-2 lg:px-8 lg:pt-6">
-          <div className="flex gap-2">
-            {tabs.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => setFilter(tab.key)}
-                className={`px-4 py-1.5 rounded-pill text-sm font-semibold transition-colors ${
-                  filter === tab.key
-                    ? 'bg-primary text-white'
-                    : 'bg-surface text-text-muted border border-border hover:border-primary hover:text-primary'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {/* ── Underline tab bar ── */}
+        <div className="px-4 lg:px-8 mt-4">
+          <div className="flex border-b border-divider">
+            {tabs.map(tab => {
+              const active = filter === tab.key;
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setFilter(tab.key)}
+                  className={`relative px-4 pb-3 text-sm transition-colors focus-visible:outline-none ${
+                    active
+                      ? 'font-semibold text-text'
+                      : 'font-medium text-text-faint hover:text-text-muted'
+                  }`}
+                >
+                  {tab.label}
+                  {active && (
+                    <span className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full bg-primary" />
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -222,52 +204,66 @@ export default function HistoryPage() {
               </p>
             </div>
           ) : (
-            <div className="mt-2 space-y-6">
+            <div className="mt-4 space-y-6">
               {dayGroups.map(group => (
                 <section key={group.date.toDateString()}>
 
-                  {/* Day header */}
-                  <div className="sticky top-[57px] lg:top-0 z-30 bg-bg py-2 flex items-center justify-between">
-                    <span className="text-sm font-bold text-text">
+                  {/* Day header — clean row, no card/shadow */}
+                  <div className="flex items-center justify-between mt-4 mb-1">
+                    <span className="text-sm font-medium text-text-muted">
                       {formatDayLabel(group.date)}
                     </span>
                     <ScoreBadge score={dayNetScore(group.items)} size="sm" />
                   </div>
 
-                  {/* Item rows */}
-                  <div className="bg-surface rounded-card shadow-card divide-y divide-border overflow-hidden">
+                  {/* Item rows — single card per day, rows divided by border */}
+                  <div className="bg-surface rounded-card shadow-card overflow-hidden">
                     {group.items
                       .slice()
                       .sort((a, b) => b.consumedAt.getTime() - a.consumedAt.getTime())
-                      .map(item => {
+                      .map((item, idx, arr) => {
                         const meta = CATEGORY_META[item.category];
+                        const isLast = idx === arr.length - 1;
                         return (
-                          <div key={item.id} className="flex items-center gap-3 px-4 py-3">
+                          <div
+                            key={item.id}
+                            className={`flex items-center gap-3 px-4 py-3 ${!isLast ? 'border-b border-divider' : ''}`}
+                          >
+                            {/* Dot indicator */}
+                            <span
+                              className="w-2 h-2 rounded-full shrink-0"
+                              style={{
+                                backgroundColor: item.score >= 6
+                                  ? '#1a6b45'
+                                  : item.score >= 1
+                                  ? '#f59e0b'
+                                  : '#d93025',
+                              }}
+                            />
 
-                            {/* Left: name + category */}
+                            {/* Name + category */}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-text truncate">{item.name}</p>
-                              <span className={`inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-pill ${meta.color}`}>
+                              <p className="font-medium text-text text-sm truncate">{item.name}</p>
+                              <span className={`inline-block mt-0.5 text-xs font-medium px-2 py-0.5 rounded-full ${meta.color}`}>
                                 {meta.label}
                               </span>
                             </div>
 
-                            {/* Center: time */}
-                            <span className="text-xs text-text-muted tabular-nums flex-shrink-0">
+                            {/* Time */}
+                            <span className="text-xs text-text-faint tabular-nums shrink-0">
                               {formatTime(item.consumedAt)}
                             </span>
 
-                            {/* Right: score or redeemed pill */}
-                            <div className="flex-shrink-0">
+                            {/* Score or redeemed label */}
+                            <div className="shrink-0">
                               {item.redeemed ? (
-                                <span className="inline-flex items-center rounded-pill font-bold text-xs px-2 py-0.5 bg-amber-100 text-amber-700">
-                                  Redeemed
+                                <span className="text-amber-600 text-xs font-medium">
+                                  redeemed
                                 </span>
                               ) : (
                                 <ScoreBadge score={item.score} size="sm" />
                               )}
                             </div>
-
                           </div>
                         );
                       })}

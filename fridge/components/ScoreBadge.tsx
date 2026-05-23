@@ -3,23 +3,34 @@ interface Props {
   size?: 'sm' | 'md' | 'lg';
 }
 
-const sizes = {
-  sm: 'text-xs px-2 py-0.5',
-  md: 'text-sm px-3 py-1',
-  lg: 'text-lg px-4 py-1.5 font-extrabold',
-};
-
 export default function ScoreBadge({ score, size = 'md' }: Props) {
-  const positive = score >= 0;
+  const pos = score >= 0;
+  const label = `${pos ? '+' : ''}${score}`;
+
+  if (size === 'lg') {
+    return (
+      <span className={`inline-flex items-center gap-1 tabular-nums font-extrabold tracking-tight text-3xl ${pos ? 'text-primary' : 'text-negative'}`}>
+        {label}
+      </span>
+    );
+  }
+
+  if (size === 'sm') {
+    return (
+      <span className={`inline-flex items-center tabular-nums font-semibold text-xs ${pos ? 'text-primary' : 'text-negative'}`}>
+        {label}
+      </span>
+    );
+  }
+
+  // md — used in lists: subtle background, no pill shape, just a tight rounded rect
   return (
-    <span
-      className={`inline-flex items-center rounded-pill font-bold tabular-nums ${sizes[size]} ${
-        positive
-          ? 'bg-primary-light text-primary'
-          : 'bg-red-50 text-negative'
-      }`}
-    >
-      {positive ? '+' : ''}{score}
+    <span className={`inline-flex items-center tabular-nums font-bold text-sm rounded-[6px] px-2 py-0.5 ${
+      pos
+        ? 'bg-primary-light text-primary'
+        : 'bg-red-50 text-negative'
+    }`}>
+      {label}
     </span>
   );
 }

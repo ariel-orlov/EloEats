@@ -2,10 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
 
 @layer base {
-  html { font-family: 'Inter', ui-sans-serif, system-ui, sans-serif; }
+  html {
+    font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
   body { @apply bg-bg text-text; }
   * { box-sizing: border-box; }
 }
@@ -13,4 +17,9 @@
 @layer utilities {
   .score-positive { @apply text-primary font-bold; }
   .score-negative { @apply text-negative font-bold; }
+
+  /* Hairline divider — thinner than Tailwind's divide */
+  .divide-hairline > * + * {
+    border-top: 1px solid #eef1ef;
+  }
 }

@@ -32,26 +32,6 @@ function GoogleLogo() {
   );
 }
 
-function FridgeIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="w-8 h-8 text-white/80"
-      aria-hidden="true"
-    >
-      <rect x="5" y="2" width="14" height="20" rx="2" />
-      <line x1="5" y1="9" x2="19" y2="9" />
-      <line x1="9" y1="14" x2="9" y2="17" />
-    </svg>
-  );
-}
-
 export default function LoginPage() {
   const router = useRouter();
 
@@ -66,103 +46,116 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex flex-col lg:flex-row bg-bg">
-      {/* ── Left panel: green brand column ── */}
-      <div className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-b lg:bg-gradient-to-br from-primary to-primary-mid w-full lg:w-1/2 px-10 py-12 lg:px-16 lg:py-16 min-h-[260px] lg:min-h-screen">
-        {/* Decorative blurred circles */}
-        <div className="pointer-events-none absolute -top-20 -left-20 w-72 h-72 rounded-full bg-white/10 blur-3xl" />
-        <div className="pointer-events-none absolute bottom-10 right-0 w-80 h-80 rounded-full bg-white/10 blur-3xl" />
+    <main className="min-h-screen flex flex-col lg:flex-row bg-bg overflow-hidden">
 
-        {/* Logo + tagline */}
-        <div className="relative z-10 flex flex-col gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center shadow-lg">
-              <FridgeIcon />
-            </div>
-            <span className="text-white font-extrabold text-3xl lg:text-4xl tracking-tight leading-none">
-              FridgeWise
-            </span>
-          </div>
-          <p className="text-white/80 text-lg lg:text-xl font-medium mt-1">
-            Eat well. Beat your friends.
+      {/* ── Mobile: stacked layout ── */}
+      {/* ── Desktop: left green panel ── */}
+      <div
+        className="relative flex flex-col justify-end lg:justify-center overflow-hidden w-full lg:w-1/2 min-h-[45vh] lg:min-h-screen"
+        style={{
+          background: 'radial-gradient(ellipse at 30% 40%, #2d8f5e 0%, #1a6b45 55%, #124d32 100%)',
+        }}
+      >
+        {/* Subtle radial highlight near top-left */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at 20% 20%, rgba(255,255,255,0.10) 0%, transparent 60%)',
+          }}
+        />
+
+        {/* Wordmark — centered on desktop, bottom-left on mobile */}
+        <div className="relative z-10 px-8 pb-10 lg:px-16 lg:pb-0 lg:text-center">
+          <p className="text-white/60 text-sm font-medium tracking-wide mb-2 lg:mb-3">
+            Your fridge, scored.
           </p>
-        </div>
-
-        {/* Bottom stat — hidden on mobile to keep header compact */}
-        <div className="relative z-10 hidden lg:flex items-center gap-2 mt-auto">
-          <div className="flex -space-x-2">
-            {['#52b788', '#40916c', '#74c69d'].map((color, i) => (
-              <div
-                key={i}
-                className="w-7 h-7 rounded-full border-2 border-primary flex items-center justify-center text-white text-[10px] font-bold"
-                style={{ backgroundColor: color }}
-              >
-                {['A', 'B', 'C'][i]}
-              </div>
-            ))}
-          </div>
-          <p className="text-white/70 text-sm font-medium">
-            30,000+ healthy meals logged
+          <h1
+            className="text-white font-extrabold leading-none"
+            style={{ fontSize: 'clamp(40px, 8vw, 64px)', letterSpacing: '-0.03em' }}
+          >
+            FridgeWise
+          </h1>
+          <p className="text-white/50 text-sm font-normal mt-3 hidden lg:block">
+            Eat well. Beat your friends.
           </p>
         </div>
       </div>
 
-      {/* ── Right panel: sign-in card ── */}
-      <div className="flex flex-1 items-center justify-center px-6 py-12 lg:px-12 bg-bg">
+      {/* ── Mobile: sign-in card slides up with rounded top corners ── */}
+      {/* ── Desktop: right white panel ── */}
+      <div
+        className="
+          relative flex flex-1 items-start lg:items-center justify-center
+          bg-bg lg:bg-white
+          rounded-t-3xl lg:rounded-none
+          -mt-6 lg:mt-0
+          shadow-[0_-4px_24px_rgba(0,0,0,0.07)] lg:shadow-none
+          px-6 pt-8 pb-10 lg:px-12 lg:py-16
+          animate-[slideUp_0.35s_cubic-bezier(0.22,1,0.36,1)_both]
+          lg:animate-none
+        "
+        style={{
+          // keyframe defined inline via style; works as a CSS animation
+        }}
+      >
+        <style>{`
+          @keyframes slideUp {
+            from { transform: translateY(32px); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+          }
+        `}</style>
+
         <div className="w-full max-w-sm">
-          {/* Card */}
-          <div className="bg-surface rounded-card shadow-card px-8 py-10 flex flex-col gap-6">
-            {/* Heading */}
-            <div className="flex flex-col gap-1.5">
-              <h1 className="text-text font-bold text-2xl leading-tight">
-                Welcome back
-              </h1>
-              <p className="text-text-muted text-sm leading-relaxed">
-                Sign in to track your fridge and compete.
-              </p>
-            </div>
+          {/* Pill handle — mobile only */}
+          <div className="lg:hidden w-10 h-1 rounded-full bg-border mx-auto mb-8" />
 
-            {/* Divider */}
-            <div className="h-px bg-border" />
-
-            {/* Auth buttons */}
-            <div className="flex flex-col gap-3">
-              {/* Apple */}
-              <button
-                onClick={handleAppleSignIn}
-                className="flex items-center justify-center gap-3 w-full bg-[#000] hover:bg-[#1a1a1a] active:bg-[#111] text-white font-semibold text-sm rounded-btn h-12 transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                <AppleLogo />
-                Sign in with Apple
-              </button>
-
-              {/* Google */}
-              <button
-                onClick={handleGoogleSignIn}
-                className="flex items-center justify-center gap-3 w-full bg-surface hover:bg-gray-50 active:bg-gray-100 text-text font-semibold text-sm rounded-btn h-12 border border-border transition-colors shadow-sm focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-              >
-                <GoogleLogo />
-                Sign in with Google
-              </button>
-            </div>
-
-            {/* Legal */}
-            <p className="text-center text-text-muted text-[11px] leading-relaxed">
-              By signing in you agree to our{' '}
-              <span className="underline underline-offset-2 cursor-pointer hover:text-text transition-colors">
-                Terms of Service
-              </span>{' '}
-              and{' '}
-              <span className="underline underline-offset-2 cursor-pointer hover:text-text transition-colors">
-                Privacy Policy
-              </span>
-              .
+          {/* Heading */}
+          <div className="mb-7">
+            <h2
+              className="text-text font-bold leading-tight"
+              style={{ fontSize: '24px', letterSpacing: '-0.02em' }}
+            >
+              Welcome back
+            </h2>
+            <p className="text-text-muted text-sm mt-1.5 leading-relaxed">
+              Sign in to track your fridge and compete.
             </p>
           </div>
 
-          {/* Below-card social proof — visible on mobile where left panel stat is hidden */}
-          <p className="lg:hidden text-center text-text-muted text-xs mt-6">
-            30,000+ healthy meals logged
+          {/* Auth buttons */}
+          <div className="flex flex-col gap-3">
+            {/* Apple */}
+            <button
+              onClick={handleAppleSignIn}
+              className="flex items-center justify-center gap-3 w-full bg-[#000] hover:bg-[#1c1c1e] active:bg-[#111] text-white font-semibold text-[15px] rounded-btn transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              style={{ height: '52px' }}
+            >
+              <AppleLogo />
+              Sign in with Apple
+            </button>
+
+            {/* Google */}
+            <button
+              onClick={handleGoogleSignIn}
+              className="flex items-center justify-center gap-3 w-full bg-surface hover:bg-[#f7f8f7] active:bg-[#f0f2f0] text-text font-semibold text-[15px] rounded-btn border border-border transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              style={{ height: '52px' }}
+            >
+              <GoogleLogo />
+              Sign in with Google
+            </button>
+          </div>
+
+          {/* Legal */}
+          <p className="text-center mt-6 leading-relaxed" style={{ color: '#9eada8', fontSize: '11px' }}>
+            By signing in you agree to our{' '}
+            <span className="underline underline-offset-2 cursor-pointer hover:text-text-muted transition-colors">
+              Terms of Service
+            </span>{' '}
+            and{' '}
+            <span className="underline underline-offset-2 cursor-pointer hover:text-text-muted transition-colors">
+              Privacy Policy
+            </span>
+            .
           </p>
         </div>
       </div>
