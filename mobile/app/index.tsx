@@ -42,9 +42,9 @@ export default function AppScreen() {
         <View style={styles.centerWrap}>
           <View style={styles.card}>
             <View style={styles.logoMark}>
-              <Text style={styles.logoText}>FW</Text>
+              <Text style={styles.logoText}>EE</Text>
             </View>
-            <Text style={styles.appName}>FridgeWise</Text>
+            <Text style={styles.appName}>EloEats</Text>
             <Text style={styles.tagline}>Eat well. Beat your friends.</Text>
             <View style={styles.loadingRow}>
               <ActivityIndicator color={THEME.primary} />
@@ -59,9 +59,9 @@ export default function AppScreen() {
         <View style={styles.centerWrap}>
           <View style={styles.card}>
             <View style={[styles.logoMark, styles.logoMarkError]}>
-              <Text style={styles.logoText}>FW</Text>
+              <Text style={styles.logoText}>EE</Text>
             </View>
-            <Text style={styles.appName}>FridgeWise</Text>
+            <Text style={styles.appName}>EloEats</Text>
             <Text style={styles.errorTitle}>We could not reach the app.</Text>
             <Text style={styles.errorText}>
               Start the Next.js server and try again:

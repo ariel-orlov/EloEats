@@ -258,7 +258,7 @@ export const DEMO_SETTINGS_ROWS = [
   'Edit display name',
   'Notification preferences',
   'Privacy settings',
-  'About FridgeWise',
+  'About EloEats',
 ];
 
 // ─── Legacy aliases (keep backwards compat) ──────────────────────────────────

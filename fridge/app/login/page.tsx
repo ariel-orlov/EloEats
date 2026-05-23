@@ -106,7 +106,7 @@ export default function LoginPage() {
               letterSpacing: '-0.03em',
             }}
           >
-            FridgeWise
+            EloEats
           </h1>
 
           {/* Desktop-only tagline */}

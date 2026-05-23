@@ -23,7 +23,7 @@ const SETTINGS_ROWS = [
   { label: 'Edit display name',           emoji: '✏️' },
   { label: 'Notification preferences',    emoji: '🔔' },
   { label: 'Privacy settings',            emoji: '🔒' },
-  { label: 'About FridgeWise',            emoji: 'ℹ️' },
+  { label: 'About EloEats',                emoji: 'ℹ️' },
 ];
 
 // ─── Icons ───────────────────────────────────────────────────────────────────

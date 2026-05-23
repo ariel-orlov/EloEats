@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "FridgeWise",
-    "slug": "fridgewise",
+    "name": "EloEats",
+    "slug": "eloeats",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -11,15 +11,15 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.fridgewise.app"
+      "bundleIdentifier": "com.eloeats.app"
     },
     "android": {
-      "package": "com.fridgewise.app",
+      "package": "com.eloeats.app",
       "adaptiveIcon": {
         "backgroundColor": "#2d6a4f"
       }
     },
-    "scheme": "fridgewise",
+    "scheme": "eloeats",
     "plugins": [
       "expo-router",
       "expo-asset",

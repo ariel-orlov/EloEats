@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'FridgeWise',
+  title: 'EloEats',
   description: 'Smart fridge health scoring and leaderboard',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'FridgeWise',
+    title: 'EloEats',
   },
   other: {
     'mobile-web-app-capable': 'yes',

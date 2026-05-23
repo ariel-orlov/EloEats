@@ -330,7 +330,7 @@ export default function HomePage() {
         {/* Mobile header */}
         <header className="sticky top-0 z-40 px-4 py-3 flex items-center lg:hidden bg-surface/95 backdrop-blur-md border-b border-divider">
           <h1 className="font-bold text-text" style={{ fontFamily: '"Bricolage Grotesque", sans-serif', fontSize: '18px' }}>
-            FridgeWise
+            EloEats
           </h1>
         </header>
 
