@@ -82,33 +82,39 @@ export async function POST(req: NextRequest) {
   try {
     if (mode === 'inventory') {
       const items = await identifyFridgeContents(image);
-      const snapshot: Omit<FridgeSnapshot, 'id'> = {
-        items,
-        capturedAt: new Date().toISOString(),
-      };
-      const ref = await db.collection('snapshots').add(snapshot);
-      return NextResponse.json({ snapshotId: ref.id, items });
+      let snapshotId: string | null = null;
+      try {
+        const ref = await db.collection('snapshots').add({ items, capturedAt: new Date().toISOString() });
+        snapshotId = ref.id;
+      } catch (dbErr) {
+        console.warn('Firestore snapshot save skipped:', (dbErr as Error).message);
+      }
+      return NextResponse.json({ snapshotId, items });
     }
 
     // diff mode: compare current image against last known snapshot
-    const lastSnap = await db
-      .collection('snapshots')
-      .orderBy('capturedAt', 'desc')
-      .limit(1)
-      .get();
+    let before: FridgeSnapshot | null = null;
+    try {
+      const lastSnap = await db.collection('snapshots').orderBy('capturedAt', 'desc').limit(1).get();
+      if (!lastSnap.empty) before = lastSnap.docs[0].data() as FridgeSnapshot;
+    } catch (dbErr) {
+      console.warn('Firestore baseline read skipped:', (dbErr as Error).message);
+    }
 
-    if (lastSnap.empty) {
+    if (!before) {
       return NextResponse.json({ error: 'No baseline snapshot found. Run an inventory scan first.' }, { status: 409 });
     }
 
-    const before = lastSnap.docs[0].data() as FridgeSnapshot;
     const consumed = await detectConsumedItems(before.items, image);
 
-    // Save new snapshot as the updated baseline
-    await db.collection('snapshots').add({
-      items: before.items.filter(i => !consumed.some(c => c.name === i.name)),
-      capturedAt: new Date().toISOString(),
-    });
+    try {
+      await db.collection('snapshots').add({
+        items: before.items.filter(i => !consumed.some(c => c.name === i.name)),
+        capturedAt: new Date().toISOString(),
+      });
+    } catch (dbErr) {
+      console.warn('Firestore diff snapshot save skipped:', (dbErr as Error).message);
+    }
 
     return NextResponse.json({ consumed });
   } catch (err) {
