@@ -2,12 +2,13 @@ import { db } from './firebase-admin';
 import type { FoodItem } from '@/types';
 
 export async function updateLeaderboard(userId: string, displayName: string, items: FoodItem[]) {
+  if (!db) return;
   void items;
   const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  await db.runTransaction(async tx => {
-    const recentSnap = await db
+  await db!.runTransaction(async tx => {
+    const recentSnap = await db!
       .collection('consumed')
       .where('userId', '==', userId)
       .where('consumedAt', '>=', thirtyDaysAgo.toISOString())
@@ -37,7 +38,7 @@ export async function updateLeaderboard(userId: string, displayName: string, ite
       cursor.setUTCDate(cursor.getUTCDate() - 1);
     }
 
-    const scoreRef = db.collection('scores').doc(userId);
+    const scoreRef = db!.collection('scores').doc(userId);
     tx.set(scoreRef, {
       displayName,
       avgScore: parseFloat(avg.toFixed(2)),
