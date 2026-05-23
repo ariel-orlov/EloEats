@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 // In the simulator/dev, the Next.js app runs on your Mac's localhost.
 // On a real device over the same Wi-Fi, replace with your Mac's local IP, e.g. http://192.168.1.x:3000
 // In production, replace with your deployed URL.
-const DEV_URL = Platform.OS === 'ios' ? 'http://localhost:3000' : 'http://10.0.2.2:3000';
+const DEV_URL = Platform.OS === 'ios' ? 'http://10.24.0.146:3000' : 'http://10.0.2.2:3000';
 const PROD_URL = process.env.EXPO_PUBLIC_APP_URL ?? DEV_URL;
 
 export default function AppScreen() {
