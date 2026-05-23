@@ -206,6 +206,16 @@ const sectionLabelStyle: React.CSSProperties = {
   color: '#96AEA7',
 };
 
+// Praise message shown when the user logs items with a net-positive score.
+// Tier the message by how healthy the logged batch was.
+function praiseFor(items: FoodItem[]): string {
+  const score = items.reduce((acc, i) => acc + i.score, 0);
+  if (score >= 20) return 'Crushing it! ';
+  if (score >= 10) return 'Great choices! ';
+  if (score >= 3) return 'Good job! ';
+  return '';
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
@@ -306,10 +316,10 @@ export default function HomePage() {
 
       setConsumed(prev => [...pendingItems, ...prev]);
       setInventory(prev => prev.filter(inv => !pendingItems.some(p => p.name === inv.name)));
-      setStatus(`Logged ${pendingItems.length} item${pendingItems.length !== 1 ? 's' : ''} as eaten.`);
+      setStatus(`${praiseFor(pendingItems)}Logged ${pendingItems.length} item${pendingItems.length !== 1 ? 's' : ''} as eaten.`);
     } catch {
       setConsumed(prev => [...pendingItems, ...prev]);
-      setStatus(`Logged ${pendingItems.length} item${pendingItems.length !== 1 ? 's' : ''} as eaten.`);
+      setStatus(`${praiseFor(pendingItems)}Logged ${pendingItems.length} item${pendingItems.length !== 1 ? 's' : ''} as eaten.`);
     } finally {
       setScanning(false);
     }

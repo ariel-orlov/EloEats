@@ -11,6 +11,7 @@ export interface FoodItem {
   score: number;
   category: FoodCategory;
   explanation: string;
+  calories?: number;
 }
 
 // A snapshot of fridge contents at a point in time
