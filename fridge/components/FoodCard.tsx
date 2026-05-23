@@ -1,5 +1,6 @@
 import ScoreBadge from './ScoreBadge';
 import type { FoodItem } from '@/types';
+import { foodEmoji } from '@/lib/foodEmoji';
 
 const CATEGORY_META: Record<FoodItem['category'], { label: string; emoji: string; color: string; bg: string }> = {
   vegetable_fruit:    { label: 'Veg & Fruit', emoji: '🥦', color: '#166534', bg: '#DCFCE7' },
@@ -18,6 +19,7 @@ interface Props {
 
 export default function FoodCard({ item, consumed = false, showExplanation = false }: Props) {
   const meta = CATEGORY_META[item.category];
+  const emoji = foodEmoji(item.name) ?? meta.emoji;
 
   return (
     <div className={`flex items-center gap-3 py-3.5 px-4 transition-opacity ${consumed ? 'opacity-40' : ''}`}>
@@ -27,7 +29,7 @@ export default function FoodCard({ item, consumed = false, showExplanation = fal
         style={{ background: meta.bg }}
         aria-hidden="true"
       >
-        {meta.emoji}
+        {emoji}
       </span>
 
       <div className="flex-1 min-w-0">
